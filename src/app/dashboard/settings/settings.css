@@ -1,0 +1,12 @@
+.eba-settings{max-width:960px;margin:0 auto;padding:clamp(8px,2vw,28px)}
+.eba-settings>h1{font-size:clamp(28px,4vw,40px);letter-spacing:-.04em;margin:6px 0;color:var(--eba-forest,#183d30)}
+.eba-settings>p{color:#657169}.eba-settings__eyebrow{text-transform:uppercase;letter-spacing:.13em;font-size:10px;font-weight:700;margin:0;color:#657169}
+.eba-google{background:#fffefa;border:1px solid #dedfd5;border-radius:18px;padding:clamp(18px,3vw,32px);margin-top:28px;color:#263c30}
+.eba-google header{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.eba-google h2{font-size:20px;margin:5px 0;letter-spacing:-.025em}
+.eba-google__icon{width:44px;height:44px;border-radius:12px;border:1px solid #cbd7ce;display:grid;place-items:center;font-size:21px;font-weight:700;background:#f0f4ec}
+.eba-google__status{margin-left:auto;border:1px solid #ddd7c9;border-radius:99px;background:#f6f2e7;color:#71624a;padding:7px 11px;font-size:12px}.eba-google__status[data-connected=true]{background:#edf5eb;color:#26593a;border-color:#ccddc8}
+.eba-google>p{font-size:14px;line-height:1.7;color:#617065}.eba-google__notice{padding:12px 15px;border-left:3px solid #9d8651;background:#f7f4e9}
+.eba-google dl{display:grid;gap:0;margin:24px 0;border-top:1px solid #e8e8de}.eba-google dl>div{display:grid;grid-template-columns:160px 1fr;padding:14px 0;gap:14px;border-bottom:1px solid #e8e8de;font-size:13px}.eba-google dt{color:#718071}.eba-google dd{margin:0;overflow-wrap:anywhere}
+.eba-google__readiness{background:#f1f4ed;border-radius:12px;padding:18px;font-size:13px;line-height:1.7}.eba-google__readiness p{margin:6px 0 0;color:#60705e}
+.eba-google footer{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:24px}.eba-google footer p{font-size:13px;margin:0;flex:1}.eba-google button{cursor:pointer;border:1px solid #d5dace;border-radius:9px;background:transparent;color:#274b36;padding:11px 15px;font:inherit;font-size:13px;min-height:42px}.eba-google button.eba-google__primary{background:#244e3b;border-color:#244e3b;color:white}.eba-google button:disabled{opacity:.5;cursor:default}.eba-google button:focus-visible{outline:3px solid #b49b58;outline-offset:3px}
+@media(max-width:540px){.eba-google__status{margin-left:58px}.eba-google dl>div{grid-template-columns:1fr;gap:5px}.eba-google footer{align-items:stretch}.eba-google footer form{flex:1}.eba-google footer button{width:100%}}

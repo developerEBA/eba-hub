@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "project": {
+    "name": "eba-hub",
+    "productType": null,
+    "stack": [
+      "nextjs",
+      "react",
+      "shadcn",
+      "tailwind-v4"
+    ]
+  },
+  "sources": {
+    "tokens": [
+      "src/app/globals.css"
+    ],
+    "components": [
+      "src/app/dashboard/galaxy"
+    ],
+    "assets": [
+      "public/images"
+    ],
+    "instructions": []
+  },
+  "design": {
+    "colorMode": "light-and-dark",
+    "colors": {
+      "--background": {
+        "value": "#0a0a0a",
+        "source": "src/app/globals.css"
+      },
+      "--foreground": {
+        "value": "#ededed",
+        "source": "src/app/globals.css"
+      },
+      "--color-background": {
+        "value": "var(--background)",
+        "source": "src/app/globals.css"
+      },
+      "--color-foreground": {
+        "value": "var(--foreground)",
+        "source": "src/app/globals.css"
+      }
+    },
+    "typography": {
+      "--font-sans": {
+        "value": "var(--font-geist-sans)",
+        "source": "src/app/globals.css"
+      },
+      "--font-mono": {
+        "value": "var(--font-geist-mono)",
+        "source": "src/app/globals.css"
+      }
+    },
+    "spacing": {},
+    "radius": {},
+    "shadows": {},
+    "motion": {
+      "--letter-duration": {
+        "value": "235ms",
+        "source": "src/app/globals.css"
+      }
+    },
+    "density": "unknown"
+  },
+  "components": {
+    "installed": [
+      "Galaxy",
+      "galaxy-background"
+    ],
+    "preferredPrimitives": [],
+    "patterns": []
+  },
+  "constraints": {
+    "must": [],
+    "avoid": []
+  },
+  "decisions": [
+    {
+      "scope": "Calendar Part 2 meeting readiness",
+      "direction": "Extend existing Calendar and Overview with native status badges, verified Join links, separate recording warnings and organizer-only retry. Preserve responsive layouts and role boundaries.",
+      "source": "User requested EBA forest green #063C2D and yellow #FDE342, truthful preparing/ready/recording states",
+      "tokens": {
+        "forest": "#063C2D",
+        "yellow": "#FDE342"
+      }
+    },
+    {
+      "scope": "Games Lounge",
+      "direction": "Forest green and ivory clubhouse; gold invitation band directly below heading; personal wins, losses, draws and streak record; three-column game library with existing SVG art; lightweight generated tabletop artwork; native create-room dialog.",
+      "source": "User requested a beautiful games redesign with invitations above games and win/loss streaks",
+      "tokens": {
+        "ink": "#163d2e",
+        "background": "#f7f5ef",
+        "gold": "#ba8d37"
+      }
+    },
+    {
+      "scope": "Chess, Ludo and Checkers playing boards",
+      "direction": "HD sculpted pieces in a shared transparent WebP atlas; walnut and brass frames, ivory squares, gold selection rings, accessible legal move markers; direct Ludo pawn controls; retain existing game rules.",
+      "source": "User requested HD chess and ludo and premium checkers"
+    },
+    {
+      "scope": "Calendar Part 1",
+      "direction": "Existing forest-green and ivory staff dashboard; Monday-based week and agenda views; native accessible meeting dialog; explicit Lagos timezone; real attendee and assignment data only.",
+      "source": "Calendar Part 1 requirements"
+    },
+    {
+      "scope": "Opening screen supporting copy",
+      "direction": "Reuse the existing EBA Hub CSS rolling-letter reveal for ENI BRAND ARCHITECT and Your private workspace., with shorter staggered timings, screen-reader text and a static reduced-motion version.",
+      "source": "User requested matching animations on both opening lines"
+    },
+    {
+      "scope": "Overview upcoming meetings reference",
+      "direction": "Compact white card with header View All, yellow/green left accents, title and Lagos time, real participant avatar stacks or initials, camera icon and forest-green protected Join Meeting button. Keep all daily records scrollable and show a neutral pending action for missing Meet links.",
+      "source": "User-provided EBA Hub dashboard reference image; restyle meetings card only",
+      "tokens": {
+        "forest": "#063C2D",
+        "yellow": "#FDE342"
+      }
+    }
+  ],
+  "evidence": [
+    {
+      "fact": "components.installed",
+      "source": "src/app/dashboard/galaxy"
+    },
+    {
+      "fact": "design.colorMode:light-and-dark",
+      "source": "src/app/globals.css"
+    },
+    {
+      "fact": "design.tokens",
+      "source": "src/app/globals.css"
+    },
+    {
+      "fact": "project.stack:nextjs",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:react",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:shadcn",
+      "source": "components.json"
+    },
+    {
+      "fact": "project.stack:tailwind-v4",
+      "source": "package.json"
+    }
+  ],
+  "generatedAt": "2026-11-16T10:15:24.774Z"
+}

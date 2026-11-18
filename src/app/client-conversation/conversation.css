@@ -1,0 +1,24 @@
+.eba-client-chat { display: grid; gap: .9rem; }
+.eba-client-chat__messages { display: grid; gap: .55rem; padding: .8rem; border-radius: .7rem; background: #f1f5ef; }
+.eba-client-chat__messages li { display: block; width: fit-content; max-width: min(100%, 34rem); padding: .6rem .8rem; border: 1px solid #d8e1da; border-radius: .65rem; background: white; }
+.eba-client-chat__messages li[data-own="true"] { justify-self: end; background: #e0eee2; }
+.eba-client-chat__messages li > div { display: flex; flex-wrap: wrap; gap: .2rem .8rem; align-items: baseline; font-size: .78rem; }
+.eba-client-chat__messages p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.eba-client-chat__messages time { color: #4e6559; }
+.eba-client-chat__empty { padding: 1rem; border: 1px dashed #a5c0af; border-radius: .65rem; }
+.eba-client-chat__composer { display: grid; gap: .5rem; }
+.eba-client-chat__composer textarea { width: 100%; padding: .65rem; border: 1px solid #9eb2a4; border-radius: .55rem; background: white; resize: vertical; }
+.eba-client-chat__composer button { justify-self: end; padding: .5rem .8rem; border-radius: .5rem; background: #165237; color: white; font-weight: 700; }
+.eba-client-chat__composer button:disabled { opacity: .65; }
+.eba-client-chat :focus-visible { outline: 2px solid #967019; outline-offset: 2px; }
+
+.eba-client-chat__unread {
+  display: inline-block;
+  margin-inline-start: .35rem;
+  padding: .1rem .45rem;
+  border-radius: 1rem;
+  background: #e0eee2;
+  color: #164a3a;
+  font-size: .72rem;
+  font-weight: 700;
+}

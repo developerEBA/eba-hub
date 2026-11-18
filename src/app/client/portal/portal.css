@@ -1,0 +1,19 @@
+.eba-client-portal {
+  width: min(100%, 52rem);
+  min-height: 100svh;
+  margin-inline: auto;
+  padding: clamp(1rem, 4vw, 2rem);
+  color: #15372a;
+  background: white;
+}
+.eba-client-portal header,
+.eba-client-portal li { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.eba-client-portal header { border-bottom: 1px solid #dce6df; padding-bottom: 1rem; margin-bottom: 1.5rem; }
+.eba-client-portal h1 { font-size: 2rem; font-weight: 700; margin-block: 0.75rem; overflow-wrap: anywhere; }
+.eba-client-portal a { text-decoration: underline; text-underline-offset: 0.2em; }
+.eba-client-portal button { padding: 0.5rem 0.75rem; border: 1px solid #a5c0af; border-radius: 0.5rem; }
+.eba-client-portal li { padding: 0.8rem 0; border-bottom: 1px solid #dce6df; overflow-wrap: anywhere; }
+.eba-client-portal__description { white-space: pre-wrap; overflow-wrap: anywhere; margin-bottom: 1rem; }
+
+.eba-client-portal header { flex-wrap: wrap; }
+.eba-client-portal header > a:first-child { margin-inline-end: auto; }

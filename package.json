@@ -1,0 +1,43 @@
+{
+  "name": "eba-hub",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test:calendar:calls": "node --test scripts/verify-call-lifecycle.cjs",
+    "test:meeting-updates": "node --test scripts/verify-meeting-updates.cjs",
+    "test:calendar:import": "node --test scripts/verify-calendar-import.cjs",
+    "dev": "next dev",
+    "calendar:worker": "node scripts/calendar-worker.mjs",
+    "test:calendar:reminders": "node --test scripts/verify-calendar-reminders.cjs",
+    "test:calendar:worker": "node --test scripts/verify-calendar-worker.mjs",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test:google": "node scripts/verify-google-organizer.cjs",
+    "test:rendering": "node scripts/verify-rendering.cjs",
+    "test:calendar:google": "node scripts/verify-calendar-google.cjs",
+    "test:calendar:google:live": "node scripts/verify-calendar-browser.mjs --google",
+    "test:calendar": "node scripts/verify-calendar.cjs",
+    "test:calendar:live": "node scripts/verify-calendar-browser.mjs"
+  },
+  "dependencies": {
+    "@supabase/ssr": "0.12.7",
+    "@supabase/supabase-js": "2.119.0",
+    "chess.js": "1.4.0",
+    "google-auth-library": "^10.5.0",
+    "next": "16.4.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/turbopack": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "babel-plugin-react-compiler": "1.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.5",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
