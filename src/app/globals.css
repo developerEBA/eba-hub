@@ -1,4 +1,3 @@
-/* Keep generated logs, snapshots and dependency files out of the dev watcher. */
 @import "tailwindcss";
 @source "../";
 

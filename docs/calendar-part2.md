@@ -465,7 +465,7 @@ existing connection, a build, a mocked test or an unexecuted SQL script.
 | Production build | `npm run build` passed with the existing installed dependency |
 | UI fixture QA | Actual Calendar, meeting dialog and Overview components at 1280×900 and 390×844; pending hides Join, recording failure keeps Join, owner retry confirms configured, invitee has zero retry controls, Overview shows the same status, no horizontal overflow or browser console errors |
 | UI fixture path | Isolated component fixture; not a signed-in hosted acceptance run. |
-| UI review | 21st metadata consulted and existing native controls reused; no component installed. Review found only the existing meeting-dialog autofocus warning, retained as deliberate initial focus within a native modal. |
+| UI review | Existing native controls reused. Review found only the existing meeting-dialog autofocus warning, retained as deliberate initial focus within a native modal. |
 | Hosted SQL / live Google | Supplied, not executed. No live event was created and no recording was started. |
 
 UI colors use EBA forest `#063C2D` and yellow `#FDE342`. Screenshots use fixture

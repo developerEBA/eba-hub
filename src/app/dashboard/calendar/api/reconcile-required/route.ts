@@ -1,8 +1,8 @@
 import { calendarAdmin,calendarAuth,calendarHeaders } from "../../server";
 
 function logReconciliationRpcError(mode:"preview"|"apply",code:string|undefined) {
-  // Error codes are the only database diagnostic emitted here. Never log the
-  // PostgREST message/details, which may contain data from the failed query.
+
+
   const safeCode=code&&(/^[0-9A-Z]{5}$/.test(code)||/^PGRST[0-9]{3}$/.test(code))?code:"UNKNOWN";
   console.error("[calendar.required-participants.reconciliation]",{mode,code:safeCode});
 }

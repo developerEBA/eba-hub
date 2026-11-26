@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { RoomView } from "./catalog";
 
-// An original, quiet pentatonic loop, synthesized locally without audio downloads.
+
 function note(context: AudioContext, frequency: number, at: number, duration: number, volume = .035) {
   const oscillator = context.createOscillator(), gain = context.createGain();
   oscillator.type = "sine";
@@ -39,7 +39,7 @@ export function GameEffects({ view }: { view: RoomView }) {
       try {
         audio.current ??= new AudioContext();
         void audio.current.resume().then(play).catch(() => {});
-      } catch { /* Playing remains available on browsers without Web Audio. */ }
+      } catch {  }
     };
     const visibility = () => {
       if (document.hidden) void audio.current?.suspend();

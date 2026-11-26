@@ -88,7 +88,7 @@ export async function POST(request: Request) {
   const key = process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) return errorResponse("Attachment storage is unavailable.", 503);
 
-  // Only the server can stage validated objects. The message is still written under user RLS.
+
   const storage = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } })
     .storage.from("connect-attachments");
   const path = room.id + "/" + user.id + "/" + crypto.randomUUID();
@@ -102,7 +102,7 @@ export async function POST(request: Request) {
   });
   if (!error) return success();
 
-  // A failed response can follow a successful commit. Check before deleting a staged file.
+
   const retry = await client.from("connect_messages").select("id,conversation_id,kind,attachment_path")
     .eq("sender_id", user.id).eq("client_id", retryId).maybeSingle();
   if (!retry.error && retry.data?.attachment_path !== path) await storage.remove([path]);

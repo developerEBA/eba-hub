@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports -- Run TypeScript with the already installed compiler. */
+/* eslint-disable @typescript-eslint/no-require-imports*/
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const fs = require('node:fs');

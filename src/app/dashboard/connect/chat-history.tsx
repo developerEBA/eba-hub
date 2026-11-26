@@ -70,7 +70,7 @@ export function ChatHistory({ conversation, latest, members, userId, general, un
       setHistory((current) => current.messages.some((item) => item.id === updated.id)
         ? { ...current, messages: mergeMessages(current.messages, [updated]) } : current);
     } catch {
-      // The next successful update or refresh can retry the request.
+
     }
   }, [conversation]);
 
@@ -86,7 +86,7 @@ export function ChatHistory({ conversation, latest, members, userId, general, un
       const batch: Batch = await response.json();
       setHistory((current) => ({ ...current, messages: mergeMessages(current.messages, batch.messages), hasOlder: batch.hasOlder }));
     } catch {
-      // A later realtime event or reconnect refresh can retry the request.
+
     }
   }, [conversation, router]);
 

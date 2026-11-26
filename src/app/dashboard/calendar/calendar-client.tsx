@@ -59,7 +59,7 @@ export function CalendarClient({ userId, initial, directory, initialMeetingId,ca
       const response=await fetch(`/dashboard/calendar/api/${detailId}`,{cache:"no-store",signal:controller.signal});
       if(response.ok){const next=await response.json();if(!controller.signal.aborted)setDialog(current=>current&&typeof current!=="string"&&current.id===detailId?next:current)}
       else if([401,403,404].includes(response.status)){setDialog(null);setNotice("Meeting access is no longer available.")}
-    }catch{/* Existing detail remains; protected operations recheck access. */}finally{busy=false}};
+    }catch{}finally{busy=false}};
     const timer=setInterval(()=>void refresh(),15000);window.addEventListener("focus",refresh);
     return()=>{controller.abort();clearInterval(timer);window.removeEventListener("focus",refresh)};
   },[detailId]);

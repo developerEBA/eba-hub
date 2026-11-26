@@ -26,7 +26,7 @@ export async function submitPeriodNomination(_previous: string | null, form: For
   const mostImproved = target?.type === "most_improved_month";
   const what = value(form, "what_they_did"), collaboration = value(form, "collaboration"), beneficiaries = value(form, "who_benefited"), results = value(form, "what_changed"), evidence = value(form, "evidence_url");
   const evidenceDate = value(form, "evidence_date");
-  let evidenceUrl: URL | null = null; try { evidenceUrl = new URL(evidence); } catch { /* validation below */ }
+  let evidenceUrl: URL | null = null; try { evidenceUrl = new URL(evidence); } catch {  }
   const beforeDate = value(form, "before_date"), afterDate = value(form, "after_date"), beforeEvidence = value(form, "before_evidence"), afterEvidence = value(form, "after_evidence");
   if (!target || !/^\d{4}-\d{2}-\d{2}$/.test(evidenceDate) || evidenceDate < target.period || evidenceDate >= recognitionPeriodEnd(target.cadence,target.period) ||
       contributorIds.length !== new Set(contributorIds).size || (!teamwork && contributorIds.length !== 1) || (teamwork && contributorIds.length < 2) ||

@@ -59,8 +59,8 @@ export function failureCode(error: unknown): LinkError {
   return "provider_unavailable";
 }
 
-// All I/O is awaited. Google writes are guarded by the durable lease/version and
-// If-Match. Finishing rechecks the same version under database locks.
+
+
 export async function synchronizeClaim(repo: SyncRepository, provider: GoogleMeetProvider, claim: Claim, organizerEmail: string, workspace: string) {
   const m = claim.meeting, job = claim.job, id = m.provider_event_id ?? eventIdFor(m.id);
   let progress: Partial<SyncResult> = {}, linkReady = false;
@@ -78,8 +78,8 @@ export async function synchronizeClaim(repo: SyncRepository, provider: GoogleMee
         if (!ownsEvent(event,m,workspace) || !event.etag) throw new SyncFailure("conflict");
         await current(); await provider.deleteEvent(id,event.etag);
       }
-      // If an earlier insert timed out, a 404 is not definitive proof Google did
-      // not accept it. Reconcile for a day to catch a late-arriving create.
+
+
       const settling = !event && job.create_attempted && job.cancel_settle_until && +new Date(job.cancel_settle_until)>Date.now();
       return await finish({ state: settling ? "retry" : "done", sync_status: settling ? "pending_cancel" : "synced", join_url: null,
         recording_status: "pending", delay: 60 });
@@ -141,8 +141,8 @@ export async function synchronizeClaim(repo: SyncRepository, provider: GoogleMee
   } catch (error) {
     if (error instanceof Superseded) return false;
     const code = failureCode(error), blocked = ["reconnect_required","permission_required","setup_required","organizer_changed","attendees_invalid"].includes(code);
-    // 412 means another writer won. Re-read on the next attempt instead of
-    // retrying the same stale write. No event or conference ID is regenerated.
+
+
     const retry = (code === "provider_unavailable" || (error instanceof GoogleHttpError && [409,412].includes(error.status))) && job.attempts<8;
     return await finish({ ...progress,state: blocked ? "blocked" : retry ? "retry" : "failed",sync_status: linkReady ? "synced" : "error",
       recording_status: linkReady ? code === "reconnect_required" ? "reconnect_required" : "warning" : m.recording_status ?? "pending",

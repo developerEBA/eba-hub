@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports -- Exercise real TS modules without installing a test runner. */
+/* eslint-disable @typescript-eslint/no-require-imports*/
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const fs = require('node:fs');
@@ -10,7 +10,7 @@ require.extensions['.ts'] = (module, filename) => {
   const source=fs.readFileSync(filename,'utf8').replaceAll('import.meta.url','require("node:url").pathToFileURL(__filename).href');
   module._compile(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,filename);
 };
-// These are fake fixture values, never loaded from .env.local.
+
 process.env.GOOGLE_TOKEN_ENCRYPTION_KEY=Buffer.alloc(32,7).toString('base64');
 process.env.GOOGLE_CLIENT_ID='fixture-client';process.env.GOOGLE_CLIENT_SECRET='fixture-secret';
 process.env.GOOGLE_REDIRECT_URI='http://localhost:3000/api/google/callback';process.env.GOOGLE_ORGANIZER_EMAIL='organizer@example.com';

@@ -6,7 +6,7 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   {
-    // The upstream Galaxy component updates its WebGL settings ref during render.
+
     files: ["src/app/dashboard/galaxy/Galaxy.jsx"],
     rules: { "react-hooks/refs": "off" },
   },

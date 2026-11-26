@@ -296,10 +296,10 @@ Record their results after completing the operator steps.
 | `npm run build -- --webpack` | Also blocked by the missing Google library |
 | Rendered Settings card | Actual React component and mocked status at 1280×900 and 390×844; disconnected → refresh → connected and Admin reconnect controls; CEO has zero mutation controls; no horizontal overflow or runtime errors |
 | Browser scope | Isolated UI fixture, not a signed-in live app |
-| 21st UI review | No blocking findings; informational color-token advice only, matching the existing dashboard palette |
+| UI review | No blocking findings; informational color-token advice only, matching the existing dashboard palette |
 | Hosted SQL / Google OAuth | Not run; operator migration/install/consent still required |
 
 The Settings card follows the existing dashboard's forest/ivory styling and native
-form controls. 21st integration-card metadata informed its grouping; no catalog
+form controls. Existing design metadata informed its grouping; no catalog
 component or dependency was installed. Screenshots are isolated UI fixtures with
 `organizer@example.com`, not proof of a real organizer connection.

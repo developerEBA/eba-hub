@@ -39,8 +39,8 @@ export async function endClaim(claim:EndClaim,provider:CallEndProvider,email:str
   current=await control("assert");
   if(current?.conflict)return await finish("shared_space","another_occurrence_open");
   if(!current?.valid)return "retry";
-  // Google exposes no compare-and-swap conference parameter for this method.
-  // Bind identity and immediately re-read to reduce replacement-conference risk.
+
+
   const canonical=space.name;
   space=await provider.getSpace(canonical);
   if(space.name!==canonical)return await finish("retry","provider_readback_incomplete");
@@ -65,7 +65,7 @@ export async function runCallEnding(id?:string){
   if(result.error)throw Error("Call-ending setup unavailable");return result.data;
  };
  try{
-  // Avoid refreshing Google credentials on every idle worker tick.
+
   let query=db.from("calendar_call_end_jobs").select("occurrence_id").lte("next_attempt_at",new Date().toISOString())
    .in("state",["pending","retry","unavailable","processing"]).limit(1);
   if(id)query=query.eq("occurrence_id",id);

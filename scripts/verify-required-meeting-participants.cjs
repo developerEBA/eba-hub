@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports -- Isolated Node test harness with the installed TypeScript compiler. */
+/* eslint-disable @typescript-eslint/no-require-imports*/
 const assert=require('node:assert/strict');
 const test=require('node:test');
 const fs=require('node:fs');

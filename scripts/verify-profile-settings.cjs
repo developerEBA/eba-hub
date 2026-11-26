@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports -- Offline tests exercise the actual TypeScript profile gates with mocked Auth/DB clients. */
+/* eslint-disable @typescript-eslint/no-require-imports*/
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript');
 const root=path.resolve(__dirname,'..');
 function source(file){return fs.readFileSync(path.join(root,file),'utf8')}

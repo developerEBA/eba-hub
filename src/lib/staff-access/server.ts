@@ -46,7 +46,7 @@ export async function manageStaff(action:string,actor:string,body:Record<string,
   const reserved=await staffRPC("invite",actor,{name:values.name,role:values.role,department,email,token_hash:hashInvite(token),request_id:body.requestId});
   try{
    const db=staffAdmin();if(!db)throw Error("Setup unavailable");
-   // Auth owns its OTP hashes and identity verification. No public sign-up or email send.
+
    const type=reserved.existing_account?"magiclink":"invite";
    const generated=await db.auth.admin.generateLink({type,email});
    const user=generated.data.user,properties=generated.data.properties;
@@ -55,7 +55,7 @@ export async function manageStaff(action:string,actor:string,body:Record<string,
    const fragment=new URLSearchParams({invite:token,token_hash:properties.hashed_token,type});
    return {message:"Invitation link created. Email delivery is not configured. Copy it now and privately share it with the intended company email owner.",link:`${origin}/staff/invitation#${fragment}`,delivery:"not_configured"};
   }catch{
-   try{await staffRPC("fail",actor,{id:reserved.id})}catch{/* Pending invitation remains visible for explicit revocation. */}
+   try{await staffRPC("fail",actor,{id:reserved.id})}catch{}
    throw Error("Invitation could not be completed. No email was sent. Refresh and revoke any pending record before retrying. An Auth account may have been created without Hub membership.");
   }
  }

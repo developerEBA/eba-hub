@@ -3,8 +3,8 @@ import { Chess } from "chess.js";
 import type { MatchState, Move } from "./catalog";
 import { requireRule } from "./rules";
 
-// A static server import keeps the installed engine visible to both Next.js
-// bundlers. Dynamic createRequire expressions can be dropped by Webpack.
+
+
 export function chessAvailable() { return typeof Chess === "function"; }
 function engine(state: MatchState) { const chess = new Chess(); if (state.moves.length) chess.loadPgn(state.moves[0]); return chess; }
 const square = (index: number) => "abcdefgh"[index % 8] + (8 - Math.floor(index / 8));

@@ -11,8 +11,8 @@ export function GameRoomClient({ id, members: initialMembers, membersPromise }: 
   const [members, setMembers] = useState(initialMembers);
   useEffect(() => {
     let active = true;
-    // React's streamed thenables do not guarantee that .then() returns a Promise.
-    // Normalize first so rejection handling always uses a native Promise chain.
+
+
     if (membersPromise) void Promise.resolve(membersPromise).then((value) => { if (active) setMembers(value); }).catch(() => {});
     return () => { active = false; };
   }, [membersPromise]);

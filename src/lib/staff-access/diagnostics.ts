@@ -1,4 +1,4 @@
-// Explicit allowlists only: never log raw provider errors, arguments or records.
+
 const actions=new Set(["directory","invite","bind","fail","revoke","inspect","verify_identity","accept","update","update_assignments","deactivate","reactivate","delete_member"]);
 export function staffFailure(action:string,error:unknown){
  const e=error as {code?:unknown;message?:unknown;name?:unknown}|null;

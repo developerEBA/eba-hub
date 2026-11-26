@@ -1,5 +1,5 @@
-/* No downloads or DB writes. Compile the actual TS rule modules with the installed TypeScript. */
-/* eslint-disable @typescript-eslint/no-require-imports -- This CommonJS test harness installs a scoped require hook to execute the project's TypeScript without another dependency. */
+
+/* eslint-disable @typescript-eslint/no-require-imports*/
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const fs = require('node:fs');
@@ -59,7 +59,7 @@ test('Room invitees: streamed thenables, rejection and unmount are handled witho
   } finally { Module._load = savedLoad; }
   const flush = () => new Promise((resolve) => setImmediate(resolve));
   const members = [{ user_id: 'staff', display_name: 'Ada' }];
-  // Reproduce React Flight's thenable: .then() returns undefined.
+
   GameRoomClient({ id: 'room', members: [], membersPromise: { then(resolve) { resolve(members); } } });
   const cleanup = effects[0]();
   await flush(); assert.deepEqual(updates, [members]); cleanup();
@@ -241,8 +241,8 @@ test('Chess: stalemate', {skip:!chessReady}, () => {const s=chessSequence(['c7b6
 test('Chess: threefold repetition across state reloads', {skip:!chessReady}, () => {const s=chessSequence(['g1f3','g8f6','f3g1','f6g8','g1f3','g8f6','f3g1','f6g8']);assert.match(s.result.message,/Draw/);});
 test('Chess: fifty-move draw', {skip:!chessReady}, () => {const s=chessSequence(['a1a2'],fenState('7k/8/8/8/8/8/8/R6K w - - 99 1'));assert.match(s.result.message,/Draw/);});
 
-// Run after `npm run build -- --webpack`. Source-only tests cannot detect a
-// bundler removing the runtime engine loader from the compiled server module.
+
+
 if (process.argv.includes('--production')) test('Production Chess: compiled engine loads, generates moves and completes checkmate', () => {
   const server = path.resolve(__dirname, '../.next/server');
   assert(fs.existsSync(path.join(server, 'webpack-runtime.js')), 'Create a Webpack production build before running --production.');

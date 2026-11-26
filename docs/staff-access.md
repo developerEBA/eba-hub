@@ -217,7 +217,7 @@ Employee/HOD dashboard-unavailable labels, safe default confirmation focus,
 Tab focus trapping, confirmed deactivation, CEO read-only controls, and 390px
 mobile page overflow. This is component verification, not a live signed-in
 dashboard/real Auth acceptance. Existing Settings primitives were reused; the
-21st team-invitation catalog was consulted for layout direction without installing
+The existing layout was used for invitation direction without installing
 components or dependencies. The modal's deliberate initial focus on Keep access
 is retained despite the generic autofocus review warning.
 

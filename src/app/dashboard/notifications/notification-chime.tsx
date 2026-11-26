@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 let context: AudioContext | null = null;
-// Prominent four-note alert; device volume and browser policy remain user-controlled.
+
 export function playNotificationTone(audio:AudioContext) {
   [659.25,880,659.25,1046.5].forEach((frequency,index)=>{
     const oscillator=audio.createOscillator(),gain=audio.createGain(),at=audio.currentTime+index*.16;
@@ -26,12 +26,12 @@ export function NotificationChime({latestUnreadId}:{latestUnreadId?:number}) {
       const key="eba-notification-last-sound",previous=sessionStorage.getItem(key);
       const prior=Number(previous??latestUnreadId);
       if(latestUnreadId>prior || previous===null)sessionStorage.setItem(key,String(latestUnreadId));
-      // Initial visit, mark-read, edits and reconnects must not replay old alerts.
+
       if(previous!==null&&latestUnreadId>prior){
         if(context?.state==="running")playNotificationTone(context);
         if("vibrate" in navigator)navigator.vibrate([220,100,220]);
       }
-    }catch{ /* Sound/storage availability never blocks the private inbox. */ }
+    }catch{  }
   },[latestUnreadId]);
   return null;
 }

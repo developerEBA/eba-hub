@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { createStaffClient, getHodDashboardAccess, getStaffRole } from "../../lib/staff-auth";
 
-// Overview, Projects, and attachment downloads use the same active staff gate.
+
 export async function requireDashboardAccess() {
   await connection();
 
@@ -18,8 +18,8 @@ export async function requireDashboardAccess() {
   return { client, role, user: data.user };
 }
 
-// Use only from HOD-capable routes. CEO/Admin management routes continue to
-// call requireDashboardAccess(), whose role check remains executive-only.
+
+
 export async function requireHodDashboardAccess() {
   await connection();
   const client = await createStaffClient();

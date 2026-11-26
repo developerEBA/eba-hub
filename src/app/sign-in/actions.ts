@@ -39,7 +39,7 @@ export async function signInStaff(_previous: string | null, form: FormData) {
   try {
     await recordConnectSignIn(data.user.id);
   } catch {
-    // A Connect outage should not block the rest of the staff workspace.
+
   }
   redirect(accountRole === "Employee" ? "/account/profile" : "/dashboard");
 }

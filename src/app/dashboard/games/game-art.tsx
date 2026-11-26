@@ -1,7 +1,7 @@
 import type { GameId } from "./catalog";
 import { ChessPiece, CheckerPiece, LudoPiece } from "./pieces";
 
-// Original, code-native illustrations. No remote artwork or tracking assets.
+
 export function GameArt({ game }: { game: GameId }) {
   if (game === "chess" || game === "checkers" || game === "ludo") return <div className={`lounge-art premium-card-art premium-card-art--${game}`} aria-hidden="true">
     <span className="premium-card-art__board"/>

@@ -1,4 +1,4 @@
-// Explicit local-development entrypoint. Importing this module never starts work.
+
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -6,7 +6,7 @@ import nextEnv from "@next/env";
 
 export const workerUrl = "http://localhost:3000/api/calendar/sync";
 export const intervalMs = 60_000;
-export const requestTimeoutMs = 150_000; // Endpoint runtime is 120s; allow transport overhead.
+export const requestTimeoutMs = 150_000;
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 export class WorkerConfigurationError extends Error {}
@@ -30,8 +30,8 @@ export function loadLocalConfiguration(directory = projectRoot) {
     throw new WorkerConfigurationError(".env.local is missing. Configure CALENDAR_SYNC_SECRET there before starting this worker.");
   }
   let failed = false;
-  // Match next dev's environment precedence. Never print loader errors or its
-  // loadedEnvFiles result: either may contain the contents of environment files.
+
+
   try { nextEnv.loadEnvConfig(directory, true, { info() {}, error() { failed = true; } }); }
   catch { failed = true; }
   if (failed) throw new WorkerConfigurationError("Could not load the local environment. Check .env.local without sharing its contents.");
@@ -65,8 +65,8 @@ function counts(data) {
     ? `processed=${processed} recorded=${recorded}${extra}${incoming}${calls}` : "processing counts unavailable";
 }
 
-// Test seams supply a fake HTTP transport/clock. The target and production timing
-// are fixed: there is no remote-URL flag or environment override.
+
+
 export async function runLocalCalendarWorker({ secret, signal, fetchImpl = globalThis.fetch, log = console.log, timers = { setTimeout, clearTimeout } }) {
   requireDevelopment();
   validateSecret(secret);
@@ -86,8 +86,8 @@ export async function runLocalCalendarWorker({ secret, signal, fetchImpl = globa
         });
         if (signal.aborted) break;
         if (!response.ok) {
-          // Do not consume or log error bodies, statusText, headers or errors.
-          // A development server/proxy might reflect sensitive request data.
+
+
           await response.body?.cancel().catch(() => {});
           const hint = [401,403].includes(response.status) ? " Check that the local server and worker use the same secret." : "";
           log(`[calendar-worker] HTTP ${response.status}; retrying after 60s.${hint}`);
@@ -103,8 +103,8 @@ export async function runLocalCalendarWorker({ secret, signal, fetchImpl = globa
         timers.clearTimeout(timeout);
         signal.removeEventListener("abort", stopRequest);
       }
-      // Start the next delay only after the entire request/body has settled.
-      // There is deliberately no setInterval or unawaited request.
+
+
       if (!signal.aborted) await pause(signal, timers);
     }
   } finally {

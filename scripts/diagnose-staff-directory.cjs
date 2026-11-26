@@ -1,4 +1,4 @@
-/* Read-only directory RPC probe. Never print env values, records, raw errors or arguments. */
+
 /* eslint-disable @typescript-eslint/no-require-imports */
 const {loadEnvConfig}=require('@next/env'),{createClient}=require('@supabase/supabase-js');
 loadEnvConfig(process.cwd(),true,{info(){},error(){}});

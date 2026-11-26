@@ -72,7 +72,7 @@ async function cleanClientFiles(client: Awaited<ReturnType<typeof requireDashboa
 
     const finished = await client.rpc("finish_client_file_cleanup", { p_paths: paths });
     if (finished.error) return false;
-    // Another request may have finished the same files in the meantime.
+
     const remaining = await client.from("client_file_cleanup").select("object_path").in("object_path", paths).limit(1);
     return !remaining.error && remaining.data.length === 0;
   } catch {

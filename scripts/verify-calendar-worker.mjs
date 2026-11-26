@@ -7,7 +7,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { runLocalCalendarWorker, workerUrl, intervalMs, requestTimeoutMs } from "./calendar-worker.mjs";
 
-// No request here reaches fetch or localhost. Tokens/bodies are fixtures only.
+
 const secret = "fixture-worker-secret-32-characters-minimum";
 const settle = () => new Promise(resolve => setImmediate(resolve));
 const response = (data = { processed: 1, recorded: 1 }, status = 200) => ({ ok: status >= 200 && status < 300, status, json: async () => data });
@@ -125,7 +125,7 @@ test("Environment loading reads a fixture .env.local, fails clearly when missing
   const script = fileURLToPath(new URL("./calendar-worker.mjs", import.meta.url));
   const env = { ...process.env, NODE_ENV: "development" };
   delete env.CALENDAR_SYNC_SECRET; delete env.__NEXT_PROCESSED_ENV; delete env.VERCEL;
-  // Import only: the CLI entrypoint is not started and no HTTP transport runs.
+
   const source = `import {loadLocalConfiguration} from ${JSON.stringify(pathToFileURL(script).href)};
     try { const config=loadLocalConfiguration(process.argv[1]); process.stdout.write(config.secret===${JSON.stringify(secret)}?'loaded':'unexpected'); }
     catch(error) { process.stderr.write(error.message); process.exitCode=1; }`;
@@ -142,7 +142,7 @@ test("Environment loading reads a fixture .env.local, fails clearly when missing
     assert.equal(production.status, 1); assert(production.stderr.includes("local development only"));
     assert(!production.stdout.includes(secret)); assert(!production.stderr.includes(secret));
   } finally {
-    // A fixed fixture filename only; no recursive deletion of computed paths.
+
     rmSync(path.join(directory, ".env.local"), { force: true });
     rmdirSync(directory);
   }

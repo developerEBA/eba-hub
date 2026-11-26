@@ -24,8 +24,8 @@ export const departmentLabels: Record<string, string> = { graphics: "Graphics", 
 
 export function calendarRequestId(source: Pick<Crypto,"getRandomValues"> & { randomUUID?: () => string } = globalThis.crypto) {
   if (typeof source.randomUUID === "function") return source.randomUUID();
-  // getRandomValues is available on local HTTP/LAN contexts where randomUUID
-  // may be absent. Keep request IDs cryptographically random without a package.
+
+
   const bytes = source.getRandomValues(new Uint8Array(16));
   bytes[6] = (bytes[6] & 15) | 64; bytes[8] = (bytes[8] & 63) | 128;
   const hex = Array.from(bytes, (value) => value.toString(16).padStart(2,"0")).join("");

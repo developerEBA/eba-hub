@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports -- Local fixture harness loads actual TypeScript modules with mocked session/RPC dependencies. */
+/* eslint-disable @typescript-eslint/no-require-imports*/
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');

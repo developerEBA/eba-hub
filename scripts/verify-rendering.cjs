@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports -- Run real source with the installed compiler and isolated browser APIs. */
+/* eslint-disable @typescript-eslint/no-require-imports*/
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript');
 const root=path.resolve(__dirname,'..');
 

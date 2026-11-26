@@ -7,7 +7,7 @@ export async function runCalendarReminders(): Promise<ReminderCounts> {
   try {
     const client=calendarAdmin();
     if (!client) return empty;
-    // Database time only. No request parameter can inject the verification clock.
+
     const result=await client.rpc("calendar_deliver_reminders",{p_limit:10}).abortSignal(AbortSignal.timeout(8_000));
     const data=result.data;
     if (result.error || !data || ![data.delivered,data.skipped,data.checked].every(n=>Number.isSafeInteger(n)&&n>=0)) return empty;

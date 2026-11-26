@@ -13,7 +13,7 @@ export async function confirmRecordingSetting(meeting:Meeting,actorId:string){
    ||row.data.provider_calendar_id!==email||!row.data.provider_event_id)throw Error("Confirmation unavailable");
  const access=await organizerAccess();
  const provider=new CalendarGoogleProvider(async()=>access.accessToken,Date.now()+25_000);
- // Read only: do not enable recording, patch the event or start a recording.
+
  const event=await provider.getEvent(row.data.provider_event_id);
  const urls=[event?.hangoutLink,...(event?.conferenceData?.entryPoints??[]).filter(p=>p.entryPointType==="video").map(p=>p.uri)];
  if(!event||event.status==="cancelled"||event.organizer?.email!==email||!urls.includes(meeting.join_url))throw Error("Meeting changed in Google");

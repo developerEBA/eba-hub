@@ -821,8 +821,6 @@
   .eba-approvals__back { display: inline; }
   .eba-approvals__list { max-height: none; }
 }
-
-/* Dashboard overview */
 .eba-dashboard__sidebar {
   max-height: 100svh;
   overflow-y: auto;
@@ -2233,8 +2231,6 @@ button.eba-connect__person:hover { text-decoration: underline; }
 }
 .eba-client-management__form button { justify-self: start; }
 .eba-client-management__form p { overflow-wrap: anywhere; }
-
-/* Staff client workspace */
 .eba-client-workspace {
   --client-ink: #113b30;
   --client-rule: #d8e1da;
@@ -2371,8 +2367,6 @@ button.eba-connect__person:hover { text-decoration: underline; }
 .eba-client-workspace__delete-buttons button[type="submit"] { color: #fff; background: #932e28; border-color: #932e28; }
 .eba-client-workspace__delete-buttons button:disabled { opacity: .65; }
 .eba-client-workspace__cleanup { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; padding: .75rem; border: 1px solid var(--client-rule); border-radius: .6rem; background: #fff; }
-
-/* Approvals inbox */
 .eba-approvals__heading { padding-block: .65rem .25rem; }
 .eba-approvals__heading h1 { font-size: clamp(2rem, 4vw, 3rem); }
 .eba-approvals__toolbar { margin-block: 1rem; padding-bottom: 0; gap: .65rem; }
@@ -2449,8 +2443,6 @@ button.eba-connect__person:hover { text-decoration: underline; }
 
 .eba-connect__rooms form .eba-connect__person { width: 100%; padding: .5rem .75rem; border-radius: .55rem; text-align: start; }
 .eba-connect__rooms form .eba-connect__person:hover { background: #edf5ee; }
-
-/* Connect inbox */
 .eba-connect--inbox { max-width: 46rem; }
 .eba-connect__landing-heading h1 { color: #153c30; font-size: clamp(2rem, 4vw, 3rem); line-height: 1.15; }
 .eba-connect__board {
@@ -2504,8 +2496,6 @@ button.eba-connect__person:hover { text-decoration: underline; }
 .eba-notifications__calendar span { display:block; font-size:.8rem; }
 .eba-notifications__calendar > div > a { color:#063C2D; }
 .eba-notifications__calendar > div { min-width:0; overflow-wrap:anywhere; }
-
-/* Reference-inspired meeting rows, scoped to the Overview card. */
 .overview-meetings-card { container-type:inline-size; gap:0; }
 .overview-meetings-card > header { padding-bottom:.7rem; border-bottom:1px solid #edf1ed; }
 .overview-meetings-card > header h2 { font-size:1rem; letter-spacing:-.025em; }
@@ -2551,8 +2541,6 @@ button.eba-connect__person:hover { text-decoration: underline; }
 .eba-connect__legacy summary { color:#56645a; cursor:pointer; font-size:.75rem; font-weight:650; }
 .eba-connect__legacy a { display:block; padding:.45rem .55rem; border-radius:.4rem; color:#536356; font-size:.72rem; text-decoration:none; }
 .eba-connect__legacy a:hover,.eba-connect__legacy a:focus-visible { background:#edf5ee; outline-color:#1c7c4c; }
-
-/* Guided dashboard helper */
 .eba-assistant-launcher { position:fixed; z-index:70; right:max(18px,env(safe-area-inset-right)); bottom:max(18px,env(safe-area-inset-bottom)); display:grid; place-items:center; width:104px; height:104px; padding:4px; border:0; border-radius:50%; background:transparent; cursor:pointer; filter:drop-shadow(0 5px 8px #063c2d2b); animation:eba-assistant-float 4s ease-in-out infinite; }
 .eba-assistant-launcher__robot { display:block; width:88px; height:88px; object-fit:contain; overflow:visible; }
 .eba-assistant-launcher__label { position:absolute; right:calc(100% + 10px); top:50%; transform:translate(5px,-50%); padding:9px 12px; border-radius:8px; background:#063c2d; color:#fff; font:650 12px/1 Arial,sans-serif; white-space:nowrap; opacity:0; visibility:hidden; transition:opacity .16s ease,transform .16s ease,visibility .16s; }

@@ -161,7 +161,7 @@ export function ReadConversation({ conversation, through, unread }: {
       try {
         if (await readConnectChat(conversation, through) && active) router.refresh();
       } catch {
-        // A later navigation or visibility change can retry the read receipt.
+
       } finally {
         reading = false;
       }

@@ -10,7 +10,7 @@ export function NotificationJoin({meeting}:{meeting:{id:string;starts_at:string;
    const response=await fetch(`/dashboard/calendar/api/${meeting.id}?view=join`,{cache:"no-store",signal:controller.signal});
    if([401,403,404].includes(response.status)){setDenied(true);return}
    if(response.ok){const data=await response.json();if(!controller.signal.aborted){setCurrent(data);setDenied(false)}}
-  }catch{/* Keep the known deadline; the Join redirect rechecks access. */}finally{busy=false}};
+  }catch{}finally{busy=false}};
   void update();const timer=setInterval(()=>void update(),15000);window.addEventListener("focus",update);
   return()=>{controller.abort();clearInterval(timer);window.removeEventListener("focus",update)};
  },[meeting.id]);

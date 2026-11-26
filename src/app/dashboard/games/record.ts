@@ -15,8 +15,8 @@ export function summarizeRecord(userId: string, rounds: CompletedRound[], partic
     seen.add(key);
     const result = round.result;
     const player = membership.get(round.room_id);
-    // New results preserve identities even if a seat is later reused. Older
-    // results count only when the still-seated player's saved name matches.
+
+
     const seat = result.participants
       ? result.participants.find((member) => member.userId === userId)?.seat
       : player && !player.left_at && result.names?.[player.seat] === player.display_name ? player.seat : undefined;

@@ -27,13 +27,13 @@ export async function calendarAuth() {
 type StaffClient = NonNullable<Awaited<ReturnType<typeof createStaffClient>>>;
 export async function loadMeetings(client: StaffClient, userId: string, view: CalendarView = "week", limit = 200,role?:"CEO"|"Admin"|"HOD") {
   const range = viewRange(view);
-  // Active executives see every meeting. The database independently enforces
-  // the same role gate; no service-client bypass is used for calendar reads.
+
+
   const queryFor = (columns:string) => {
   let query = client.from("calendar_occurrences").select(columns);
   if(role!=="CEO"&&role!=="Admin")query=query.or(`organizer_id.eq.${userId},attendee_ids.cs.{${userId}}`);
-  // Upcoming excludes completed meetings at the current instant while still
-  // including meetings already in progress; this lets the next item move up.
+
+
   query=query.eq("status", "scheduled").gt("ends_at", range.from);
   if (view !== "upcoming") query = query.lt("starts_at", range.to);
   return query.order("starts_at").order("id").limit(limit + 1).overrideTypes<Meeting[],{merge:false}>();
@@ -55,8 +55,8 @@ export async function findMeeting(client: StaffClient, userId: string, id: strin
   if(missingSource(result.error))result=await queryFor(sourceMeetingColumns);
   return missingSource(result.error) ? await queryFor(legacyMeetingColumns) : result;
 }
-// Best-effort avatar enrichment of already authorized rows. Staff-client RLS
-// applies; never use the service client to expose a wider directory here.
+
+
 export async function loadMeetingPeople(client:StaffClient,meetings:Meeting[]):Promise<MeetingPerson[]> {
   const ids=[...new Set(meetings.flatMap(m=>[m.organizer_id,...m.attendee_ids]))].slice(0,100);
   if(!ids.length)return [];

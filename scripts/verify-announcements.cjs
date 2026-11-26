@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports -- Offline contract and HTTP-handler fixtures. */
+/* eslint-disable @typescript-eslint/no-require-imports*/
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),Module=require('node:module'),ts=require('typescript');
 const root=path.resolve(__dirname,'..'),read=(name)=>fs.readFileSync(path.join(root,name),'utf8');
 for(const ext of ['.ts','.tsx'])require.extensions[ext]=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText,f);

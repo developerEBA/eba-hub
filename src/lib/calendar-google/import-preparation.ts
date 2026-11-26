@@ -19,8 +19,8 @@ export async function ensureRequiredInvitations(provider:GoogleMeetProvider,even
   return {event:updated,updated:true,eligible:missing.every(value=>confirmed.has(value))&&[...removals].every(value=>!confirmed.has(value)),preexistingEmails:originalEmails};
  }catch{return {event,updated:false,eligible:false,preexistingEmails:originalEmails};}
 }
-// Only the worker's already-imported, organizer-owned event is eligible. Never
-// create a replacement event or change guests/title/time. ETags protect edits.
+
+
 export async function prepareImportedMeeting(provider:GoogleMeetProvider,event:GoogleEvent,email:string,now=Date.now()){
  let current=event;
  const normalized=incomingEvent(current,email);

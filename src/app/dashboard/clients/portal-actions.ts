@@ -78,7 +78,7 @@ export async function managePortal(
     p_client: clientId, p_action: operation, p_data: payload,
   });
   if (error || data !== "ok") {
-    if (staged) await storage.remove([staged]); // Storage refuses deletion once the object is linked.
+    if (staged) await storage.remove([staged]);
     return { message: data === "account-unavailable"
       ? "That verified account cannot be granted access to this client."
       : "The change could not be saved. Check whether the item has already changed." };

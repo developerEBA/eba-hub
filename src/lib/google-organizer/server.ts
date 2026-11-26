@@ -40,8 +40,8 @@ export async function googleActor(adminOnly = false) {
   if (error || !data.user) return null;
   const role = await getStaffRole(client, data.user);
   if (!role || (adminOnly && role !== "Admin")) return null;
-  // getUser checks the user with Auth; getClaims validates the signed JWT.
-  // Bind to its session ID rather than just the user or a browser cookie.
+
+
   const claims = await client.auth.getClaims();
   const session = claims.data?.claims.session_id;
   if (claims.error || typeof session !== "string" || claims.data?.claims.sub !== data.user.id) return null;
@@ -70,7 +70,7 @@ export function googleConfig() {
   return { id: id!, secret: secret!, redirect: redirect!, email, origin: url.origin };
 }
 export function sameOrigin(request: Request) {
-  // Trust configured redirect origin, never caller-controlled Host/Forwarded headers.
+
   try { return request.headers.get("origin") === new URL(process.env.GOOGLE_REDIRECT_URI ?? "").origin; } catch { return false; }
 }
 export function settingsRedirect(notice: Notice) {
@@ -136,8 +136,8 @@ export async function finishAuthorization(actor: Actor, parameters: URLSearchPar
   const refresh = tokens.refresh_token || (previous.enabled && previous.email === config.email && previous.subject === identity.sub && previous.refresh_ciphertext
     ? decrypt(previous.refresh_ciphertext, `refresh:${config.email}:${identity.sub}`) : null);
   if (!refresh) throw new ConnectionFailure("refresh_missing");
-  // Confirm the offline credential actually works before persisting/claiming a
-  // connection. This also rejects a stale fallback token after Google revocation.
+
+
   oauth.setCredentials({ refresh_token: refresh });
   const refreshed = (await oauth.refreshAccessToken()).credentials;
   if (!refreshed.access_token) throw new ConnectionFailure("refresh_missing");
@@ -148,9 +148,9 @@ export async function finishAuthorization(actor: Actor, parameters: URLSearchPar
     ciphertext: encrypt(refreshed.refresh_token || refresh, `refresh:${config.email}:${identity.sub}`), meet_supported: meet });
 }
 
-// The sole credential accessor for future server integrations. Each use refreshes
-// server-side and checks the generation again, so a completed disconnect disables
-// local use even when an earlier refresh was in flight.
+
+
+
 export async function organizerAccess() {
   const config = googleConfig(), current = await readConnection();
   if (!current.enabled || current.email !== config.email || !current.subject || !current.refresh_ciphertext) throw new ConnectionFailure("unavailable");
@@ -209,7 +209,7 @@ export async function connectionStatus(check = false): Promise<GoogleStatus> {
 }
 export async function disconnectOrganizer(actor: Actor): Promise<Notice> {
   if (actor.role !== "Admin") throw new ConnectionFailure("forbidden");
-  // Do not require Google configuration/key/library before disabling local use.
+
   const old = await rpc("disconnect", actor, {}) as Connection;
   let revoked = !old.refresh_ciphertext;
   if (old.refresh_ciphertext && old.email && old.subject) {

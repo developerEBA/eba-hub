@@ -4,8 +4,8 @@ export function incomingEvent(event:GoogleEvent,email:string) {
   if(!event.id || event.extendedProperties?.private?.ebaOccurrence)return null;
   if(event.status==="cancelled")return {id:event.id,cancelled:true};
   const start=event.start?.dateTime,end=event.end?.dateTime;
-  // External events are intentionally ignored; the connected account cannot
-  // add mandatory participants or disclose those events to EBA Hub readers.
+
+
   if(event.organizer?.email?.toLowerCase()!==email.toLowerCase())return null;
   if(event.attendeesOmitted || !start || !end
     || !Number.isFinite(Date.parse(start)) || !Number.isFinite(Date.parse(end))

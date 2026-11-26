@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS isolated verification harness, matching existing scripts. */
-// Isolated transport/database fixtures. No environment loading or network calls.
+/* eslint-disable @typescript-eslint/no-require-imports*/
+
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),Module=require('node:module'),ts=require('typescript');
 const root=path.resolve(__dirname,'..');
 test('Bell export and reminder model parse as complete modules before transpilation',()=>{

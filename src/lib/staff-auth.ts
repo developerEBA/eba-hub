@@ -14,7 +14,7 @@ export async function createSessionClient(cookieName: string) {
       try {
         for (const { name, value, options } of entries) store.set(name, value, options);
       } catch {
-        // Server Components cannot write cookies. The dashboard proxy refreshes them.
+
       }
     },
   }, cookieName);
@@ -27,9 +27,9 @@ export async function clearStaffSession(
   try {
     await client.auth.signOut({ scope: "local" });
   } catch {
-    // Local cleanup still runs if the auth service is unavailable.
+
   } finally {
-    // Clear local cookies even if the auth service cannot revoke the session.
+
     const store = await cookies();
     for (const { name } of store.getAll()) {
       if (name === cookieName || name.startsWith(cookieName + ".")) {
@@ -59,8 +59,8 @@ export async function getStaffRole(
 export type ActiveAccountRole = "CEO" | "Admin" | "Employee" | "HOD";
 export type DashboardRole = "CEO" | "Admin" | "HOD";
 
-// Active employees/HODs may use the isolated account-profile page only.
-// Dashboard authorization continues to use getStaffRole above.
+
+
 export async function getActiveAccountRole(
   client: NonNullable<Awaited<ReturnType<typeof createStaffClient>>>,
   user: { id: string; email?: string },
@@ -72,9 +72,9 @@ export async function getActiveAccountRole(
   return ({ ceo: "CEO", admin: "Admin", staff: "Employee", hod: "HOD" } as const)[data?.role as "ceo" | "admin" | "staff" | "hod"] ?? null;
 }
 
-// HOD dashboard access is deliberately separate from executive authorization.
-// Callers opt into it only on the HOD-capable workspace surfaces; management
-// routes continue to use getStaffRole and therefore remain CEO/Admin-only.
+
+
+
 export async function getHodDashboardAccess(
   client: NonNullable<Awaited<ReturnType<typeof createStaffClient>>>,
   user: { id: string; email?: string; email_confirmed_at?: string | null },

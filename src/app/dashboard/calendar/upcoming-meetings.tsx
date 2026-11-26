@@ -31,7 +31,7 @@ export function UpcomingMeetings({ initial, view = "today", maxItems = 2 }: { in
         const response = await fetch(`/dashboard/calendar/api?view=${view}&people=1`, { cache: "no-store", signal: controller.signal });
         const result = await response.json();
         if (active && Array.isArray(result.meetings)) setData(result);
-      } catch { /* Preserve the latest authorized summary through a short outage. */ }
+      } catch {  }
       finally { busy = false; }
     };
     void refresh();

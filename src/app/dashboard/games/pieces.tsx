@@ -14,7 +14,7 @@ export function ChessPiece({ piece }: { piece: string }) {
 }
 
 export function CheckerPiece({ piece }: { piece: number }) {
-  // Seat 0 is red/coral in the rules; seat 1 is the dark emerald set.
+
   return <PieceSprite column={Math.abs(piece) === 2 ? piece > 0 ? 1 : 0 : piece > 0 ? 5 : 4} row={Math.abs(piece) === 2 ? 3 : 2} className="hd-piece--checker"/>;
 }
 

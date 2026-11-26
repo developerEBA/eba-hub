@@ -17,9 +17,9 @@ type GoogleClient = {
   refreshAccessToken(): Promise<{ credentials: Tokens }>;
   getTokenInfo(accessToken: string): Promise<{ aud: string; scopes: string[] }>;
 };
-// Server-only library adapter. Install the documented dependency before running
-// the integration. Never implement JWT validation
-// ourselves or fall back to an unverified decode when it is absent.
+
+
+
 const serverRequire = createRequire(import.meta.url);
 export function googleClient(config: { id: string; secret: string; redirect: string }): GoogleClient {
   const { OAuth2Client } = serverRequire("google-auth-library") as {
@@ -36,7 +36,7 @@ export class ProviderFailure extends Error {
   constructor(public kind: "revoked" | "unavailable" | "permissions") { super(kind); }
 }
 export function isRevoked(error: unknown) {
-  // Do not log provider errors: request configs can contain credentials.
+
   const data = (error as { response?: { data?: { error?: string } } })?.response?.data;
   return data?.error === "invalid_grant";
 }
@@ -55,8 +55,8 @@ export async function revokeToken(token: string) {
     if (response.ok) return true;
     if (response.status === 400) {
       const body = await response.json() as { error?: string };
-      return body.error === "invalid_token"; // Google confirms it is already invalid.
+      return body.error === "invalid_token";
     }
-  } catch { /* Local disconnection has already committed. */ }
+  } catch {  }
   return false;
 }

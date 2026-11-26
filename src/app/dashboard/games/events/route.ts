@@ -1,6 +1,6 @@
 import { gamesAuth, noStore } from "../server";
 import { uuidPattern } from "../catalog";
-// Same server-authenticated Postgres Changes bridge as Connect. Safe room metadata only.
+
 export async function GET(request: Request) {
   const room = new URL(request.url).searchParams.get("room");
   if (room && !uuidPattern.test(room)) return new Response(null, { status: 400, headers: noStore });

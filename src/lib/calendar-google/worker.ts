@@ -43,7 +43,7 @@ export async function runCalendarSync(id?: string,budgetMs=85_000) {
     if (Date.now()>=deadline) throw new SyncFailure("provider_unavailable");
     try {
       if (cached) {
-        // A cached access token never bypasses a local disconnect/reconnect.
+
         const client = calendarAdmin();
         const current = await client?.from("google_organizer_connection").select("enabled,version,email").eq("singleton",true).single();
         if (!current?.data?.enabled || current.data.version !== cached.version || current.data.email !== email) cached = null;
@@ -62,8 +62,8 @@ export async function runCalendarSync(id?: string,budgetMs=85_000) {
     }
   };
   const provider = new CalendarGoogleProvider(access,deadline);
-  // If Google rejects an otherwise unexpired access token, refresh exactly once
-  // through the existing credential flow. No retry of ambiguous writes on 5xx.
+
+
   const authenticated = new Proxy(provider, { get(target,key) {
     const method = Reflect.get(target,key);
     if (typeof method !== "function") return method;
@@ -84,6 +84,6 @@ export async function runCalendarSync(id?: string,budgetMs=85_000) {
     processed++;
     if (await synchronizeClaim(repo,authenticated,claim,email,workspace)) recorded++;
   }
-  // Counts reveal no titles, attendee addresses, provider IDs or token details.
+
   return { processed, recorded };
 }

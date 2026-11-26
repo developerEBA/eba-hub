@@ -1,6 +1,6 @@
 import "server-only";
 import { calendarAdmin } from "../../app/dashboard/calendar/server";
-// Read capability is not management capability. Never return private provider IDs.
+
 export async function endPermission(id:string,userId:string){
  const db=calendarAdmin(),email=process.env.GOOGLE_ORGANIZER_EMAIL;
  if(!db||!email)return "setup_required" as const;

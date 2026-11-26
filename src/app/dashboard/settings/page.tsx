@@ -13,7 +13,7 @@ import "../../account/profile/profile.css";
 async function SettingsContent({ searchParams }: { searchParams: Promise<{ google?: string }> }) {
   const { role } = await requireHodDashboardAccess();
   const { google } = await searchParams;
-  // Success is established by the authenticated status endpoint, never a URL flag.
+
   const message = google && google !== "connected" && Object.hasOwn(notices, google) ? notices[google as Notice] : undefined;
   return <DashboardShell role={role} section="settings">
     <section className="eba-settings" aria-labelledby="settings-title">

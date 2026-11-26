@@ -1,4 +1,4 @@
-// Server-only question bank: never import this module from a client component.
+
 import "server-only";
 export const triviaQuestions = [
   { text: "What does the A in RGB stand for?", options: ["Alpha", "Nothing — RGB is red, green, blue", "Amber", "Alignment"], correct: 1 },

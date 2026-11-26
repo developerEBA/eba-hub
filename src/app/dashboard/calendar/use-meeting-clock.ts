@@ -8,10 +8,10 @@ function synchronize(){
  inflight=(async()=>{try{
   const response=await fetch("/dashboard/calendar/api/clock",{cache:"no-store",signal:AbortSignal.timeout(5000)});
   const result=await response.json();if(response.ok&&Number.isFinite(result.now))anchor={server:result.now,mono:performance.now()};
- }catch{/* The server redirect always enforces its own clock, including offline. */}finally{inflight=null}})();
+ }catch{}finally{inflight=null}})();
  return inflight;
 }
-// Presentation only. The protected Join route always enforces database times.
+
 export function useMeetingClock(enabled=true){
  const [now,setNow]=useState(()=>Date.now());
  useEffect(()=>{

@@ -13,9 +13,9 @@ export function NotificationUpdates({latestUnreadId}:{latestUnreadId?:number}={}
     let refreshTimer: ReturnType<typeof setTimeout> | undefined;
     const refresh = (event: MessageEvent<string>) => {
       if (event.data === "ready") {
-        // The initial server render already loaded the inbox. Refreshing on
-        // every mount's handshake can remount this subscription in a loop.
-        // A later handshake means a real reconnect: catch up on missed changes.
+
+
+
         if (!connected) { connected = true; return; }
       } else if (event.data !== "changed") return;
       clearTimeout(refreshTimer);

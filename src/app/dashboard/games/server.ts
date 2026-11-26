@@ -35,7 +35,7 @@ export async function loadLounge(client: NonNullable<Awaited<ReturnType<typeof c
   return { rooms: (rooms.data ?? []) as GameRoom[], players: (players.data ?? []) as (Player & { room_id: string })[], sessions: (sessions.data ?? []) as GameNight[], members, invitations: invitations.filter((room) => room.status === "waiting"), invitesError: Boolean(invites.error), ready: !error && Boolean(admin), chessReady: chessAvailable(), error: error || !admin ? "Multiplayer is not available yet. Please contact your Hub administrator." : null };
 }
 
-// Call only after the staff gate. Room entry needs invitees, not the entire lobby.
+
 export async function loadGameMembers(role?:"CEO"|"Admin"|"HOD",departments:string[] = []) {
   const admin = gamesAdmin();
   let members: { user_id: string; display_name: string }[] = [];

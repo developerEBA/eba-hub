@@ -21,8 +21,8 @@ export interface GoogleMeetProvider {
   getSpace(identifier: string): Promise<GoogleSpace>;
   configureRecording(name: string): Promise<GoogleSpace>;
 }
-// No credentials are persisted here; the injected accessor refreshes using the
-// existing encrypted organizer credential flow and validates local enablement.
+
+
 export class CalendarGoogleProvider implements GoogleMeetProvider {
   constructor(private access: () => Promise<string>, private deadline = Infinity) {}
   listEvents(from:string,to:string,page?:string) {

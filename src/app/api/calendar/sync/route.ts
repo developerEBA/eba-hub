@@ -29,6 +29,6 @@ export async function POST(request: Request) {
   }
   catch { return Response.json({ error: "Calendar synchronization is unavailable. Check worker and migration setup." },{ status: 503,headers: privateHeaders }); }
 }
-// Supports authenticated cron services that invoke GET. No browser session can
-// substitute for the independent server-only worker secret.
+
+
 export const GET = POST;

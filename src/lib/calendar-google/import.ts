@@ -4,7 +4,7 @@ import { organizerAccess } from "../google-organizer/server";
 import { CalendarGoogleProvider } from "./provider";
 import { incomingEvent } from "./import-model";
 import { ensureRequiredInvitations,prepareImportedMeeting } from "./import-preparation";
-// One durable page per worker cycle; independent of the outbound queue.
+
 export async function runGoogleImport() {
   const empty={available:false,imported:0,unsupported_external:0,invitations_pending:0};
   const db=calendarAdmin(),email=process.env.GOOGLE_ORGANIZER_EMAIL;
@@ -47,8 +47,8 @@ export async function runGoogleImport() {
       const imported=incomingEvent(invited.event,email);
       events.push(imported&&!("cancelled" in imported)?{...imported,preexisting_attendees:invited.preexistingEmails??[]}:imported);
     }
-    // Recheck a previously imported event independently of the listing window:
-    // moved/deleted events must not linger merely because they left that window.
+
+
     if(claim.check){
       const event=await provider.getEvent(claim.check);
       if(event){
@@ -68,8 +68,8 @@ export async function runGoogleImport() {
     return {available:true,imported:Number.isSafeInteger(result?.imported)?result.imported:0,
       unsupported_external:unsupportedExternal,invitations_pending:invitationsPending};
   }catch{
-    // Expiring lease permits retry. Never advance a page after partial failure.
-    // Invalid page tokens reset safely; no missing-row cancellation from a scan.
+
+
     if(lease&&Date.now()<deadline)try{await control("reset",{lease})}catch{}
     return empty;
   }

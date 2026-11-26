@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports -- Offline Connect policy fixtures and migration contracts. */
+/* eslint-disable @typescript-eslint/no-require-imports*/
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -18,8 +18,8 @@ const dm = (members) => ({ type: 'dm', members });
 const department = (name) => ({ type: 'department', department: name });
 const legacy = (readers) => ({ type: 'legacy_shared', readers });
 
-// Fixture truth table for the database policy. SQL contract assertions below
-// ensure production RLS and RPCs use the same inputs and rollout gate.
+
+
 function fixtureCanRead(user, room) {
   if (!user || user.status !== 'active' || !user.companyEmail || !user.hasConnectProfile) return false;
   if (user.role !== 'ceo' && user.role !== 'admin') return false;

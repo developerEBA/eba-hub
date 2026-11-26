@@ -12,7 +12,7 @@ export async function POST(request:Request){
   if(info.new_account&&(typeof data.password!=="string"||data.password.length<12||data.password.length>128))return Response.json({error:"Choose a password of 12–128 characters."},{status:400,headers:staffHeaders});
   const verified=await client.auth.verifyOtp({token_hash:data.token_hash,type:data.type});
   if(verified.error||!verified.data.user?.email_confirmed_at)throw Error("Ownership verification failed");
-  // Verify account binding BEFORE allowing a password change. Client input never chooses the identity.
+
   const {data:identity,error}=await client.auth.getUser();
   if(error||!identity.user||identity.user.id!==verified.data.user.id)throw Error("Identity unavailable");
   await staffRPC("verify_identity",identity.user.id,{token_hash:hash});

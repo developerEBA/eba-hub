@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports -- Isolated CommonJS verification harness. */
+/* eslint-disable @typescript-eslint/no-require-imports*/
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),Module=require('node:module'),ts=require('typescript');
 const root=path.resolve(__dirname,'..');
 for(const ext of ['.ts','.tsx'])require.extensions[ext]=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText,f);
@@ -7,7 +7,6 @@ const {incomingEvent}=require('../src/lib/calendar-google/import-model.ts'),emai
 const event=()=>({id:'google-fixture',organizer:{email},summary:'HOD and Leadership meeting',start:{dateTime:'2030-11-20T12:00:00+01:00'},end:{dateTime:'2030-11-20T13:00:00+01:00'},attendees:[{email:'ceo@enibrand.com'},{email:'external@example.com'},{email:'declined@enibrand.com',responseStatus:'declined'}],hangoutLink:'https://meet.google.com/abc-defg-hij'});
 test('Owned timed meeting normalizes title, instant, exact Meet URL and nondeclined addresses',()=>{
  const incoming=incomingEvent(event(),email);assert.equal(incoming.title,'HOD and Leadership meeting');assert.equal(incoming.start,event().start.dateTime);assert.equal(incoming.url,event().hangoutLink);assert.deepEqual(incoming.attendees,['ceo@enibrand.com','external@example.com']);
- // SQL maps these addresses to existing verified active staff; no profiles created.
 });
 test('Native EBA events never loop back into imported records',()=>{assert.equal(incomingEvent({...event(),extendedProperties:{private:{ebaOccurrence:'fixture'}}},email),null)});
 test('External organizer events are ignored; incomplete owned events fail closed',()=>{

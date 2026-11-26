@@ -41,7 +41,7 @@ export async function submitWeeklyNomination(_previous: string | null, form: For
   const week = form.get("week"), nominee = form.get("nominee");
   const evidenceDate = note(form, "evidence_date"), what = note(form, "what_they_did");
   const beneficiaries = note(form, "who_benefited"), results = note(form, "what_changed"), evidence = note(form, "evidence_url");
-  let url: URL | null = null; try { url = new URL(evidence); } catch { /* validated below */ }
+  let url: URL | null = null; try { url = new URL(evidence); } catch {  }
   const lagosToday = new Intl.DateTimeFormat("sv-SE", { timeZone: "Africa/Lagos" }).format(new Date());
   if (!isMonday(week) || typeof nominee !== "string" || !uuid.test(nominee) ||
       !/^\d{4}-\d{2}-\d{2}$/.test(evidenceDate) || evidenceDate < week || evidenceDate > lagosToday || evidenceDate >= new Date(Date.parse(week + "T00:00:00Z") + 7 * 86400000).toISOString().slice(0,10) ||

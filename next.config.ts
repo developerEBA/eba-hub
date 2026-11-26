@@ -1,12 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+
   distDir: process.env.EBA_NEXT_DIST_DIR || ".next",
   cacheComponents: true,
   partialPrefetching: true,
   reactCompiler: true,
-  // OAuth codes/state must never appear in Next's incoming request logs.
+
   logging: { incomingRequests: { ignore: [/\/api\/google\/callback(?:\?|$)/] } },
   serverExternalPackages: ["chess.js", "google-auth-library"],
   outputFileTracingIncludes: {

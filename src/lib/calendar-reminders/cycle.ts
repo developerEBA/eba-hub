@@ -1,6 +1,6 @@
 import type { ReminderCounts } from "./server";
-// Two bounded reminder batches surround the existing Google work. Either kind
-// of failure is isolated: reminder setup cannot block Google synchronization.
+
+
 export async function runCalendarCycle(sync:()=>Promise<{processed:number;recorded:number}>,remind:()=>Promise<ReminderCounts>) {
   const fallback: ReminderCounts={available:false,delivered:0,skipped:0,checked:0,group_delivery:"pending_private_groups"};
   const safeReminders=async()=>{try{return await remind()}catch{return fallback}};

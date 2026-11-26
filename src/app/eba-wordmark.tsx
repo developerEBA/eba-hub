@@ -13,7 +13,7 @@ const words = [
   ],
 ];
 
-// Reuse the wordmark's CSS-only letter stream without shipping animation JS.
+
 export function EbaAnimatedText({ text }: { text: string }) {
   const copyWords = text.split(" ");
   return <>

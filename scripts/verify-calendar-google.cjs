@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-require-imports -- Uses the existing TS compiler, no test dependency. */
+/* eslint-disable @typescript-eslint/no-require-imports*/
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),Module=require('node:module'),ts=require('typescript');
 const root=path.resolve(__dirname,'..');
-// Any unmocked provider request fails locally; this suite never calls Google.
+
 global.fetch=async()=>{throw Error('Unexpected network call in mocked verification')};
 require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,f);
 const original=Module._load;Module._load=function(name,...args){if(name==='server-only')return {};return original.call(this,name,...args)};
@@ -56,8 +56,8 @@ test('Google REST writes use If-Match, sendUpdates, private guest flags and narr
   try {const p=new CalendarGoogleProvider(async()=>'fixture-token');await p.insertEvent({guestsCanSeeOtherGuests:false});await p.patchEvent('id','etag',{summary:'Changed'});await p.deleteEvent('id','etag');await p.configureRecording('spaces/opaque');assert(calls[0].url.includes('conferenceDataVersion=1&sendUpdates=all'));assert.equal(calls[1].options.headers['If-Match'],'etag');assert.equal(calls[2].options.headers['If-Match'],'etag');assert(calls[3].url.endsWith('updateMask=config.artifactConfig.recordingConfig.autoRecordingGeneration'));assert(!calls.some(c=>c.url.includes('fixture-token')))}finally{global.fetch=oldFetch}
 });
 
-// Real HTTP handlers with mocked repositories: sharing a Google organizer never
-// bypasses EBA ownership, and the cron endpoint never accepts staff cookies alone.
+
+
 test('Retry API denies invitees, outsiders, signed-out and cross-origin callers',async()=>{
   let who='invitee',runs=0;const original=Module._load;
   const stub={calendarHeaders:{'Cache-Control':'private, no-store'},calendarAuth:async()=>who?{user:{id:who},client:{}}:null,findMeeting:async()=>({data:who==='outsider'?null:{organizer_id:'owner'}})};
