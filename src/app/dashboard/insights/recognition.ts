@@ -34,5 +34,17 @@ export function loadRecognition(
   client: Awaited<ReturnType<typeof requireDashboardAccess>>["client"],
   week: string,
 ) {
-  return client.from("weekly_recognition").select("winner_name,reason").eq("week_start", week).maybeSingle();
+  return client.from("weekly_recognition").select("winner_name,reason,outcome").eq("week_start", week).maybeSingle();
 }
+
+export function loadPublishedPeriodRecognition(
+  client: Awaited<ReturnType<typeof requireDashboardAccess>>["client"],
+  periodStart: string,
+) {
+  const types = ["employee_month", "teamwork_month", "most_improved_month"];
+  return Promise.all(types.map((awardType) => client.from("period_recognition_results")
+    .select("award_type,period_start,outcome,nomination_id,result_label,public_reason,published_at")
+    .eq("award_type", awardType).eq("period_start", periodStart).maybeSingle()));
+}
+
+export type PublishedPeriodRecognition = { award_type: string; period_start: string; outcome: "winner" | "no_award"; result_label: string; public_reason: string; published_at: string };

@@ -4,7 +4,8 @@ export type CalendarView = "week" | "next" | "upcoming" | "today";
 export type MeetingPerson = {user_id:string;display_name:string;avatar_url:string|null};
 export type Meeting = {
   joining_closed_at?:string|null;
-  call_end_status?:"not_requested"|"pending"|"retry"|"ended"|"no_active_call"|"unavailable"|"shared_space";
+  call_end_status?:"not_requested"|"pending"|"retry"|"ended"|"no_active_call"|"unavailable"|"shared_space"|"reconnect_required";
+  end_permission?:"eligible"|"not_manager"|"foreign_owner"|"setup_required";
   audience?: "private" | "company" | "general" | "leadership" | "department";
   audience_version?: number;
   source?: "eba" | "google";
@@ -16,8 +17,8 @@ export type Meeting = {
   recording_status?: "pending" | "configured" | "warning" | "reconnect_required";
   link_error_code?: import("./meet-model").LinkError | null;
 };
-export type Person = { user_id: string; display_name: string; role: "ceo" | "admin"; departments: string[] };
-export type Directory = { people: Person[]; departments: { id: string; label: string; count: number }[]; ready: boolean };
+export type Person = { user_id: string; display_name: string; role: "ceo" | "admin" | "staff" | "hod"; departments: string[] };
+export type Directory = { people: Person[]; requiredParticipants: Person[]; departments: { id: string; label: string; count: number }[]; ready: boolean };
 export type MeetingInput = { title: string; agenda: string; startsAt: string; endsAt: string; frequency: "once" | "weekly"; until: string | null; attendees: string[]; departments: string[] };
 export const departmentLabels: Record<string, string> = { graphics: "Graphics", development: "Development", communications: "Communications", events: "Events", marketing: "Marketing" };
 

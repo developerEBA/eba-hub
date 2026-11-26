@@ -1,8 +1,8 @@
-import { requireDashboardAccess } from "../../../access";
+import { requireHodDashboardAccess } from "../../../access";
 import { documentType, photoTypes } from "../config";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { client } = await requireDashboardAccess();
+  const { client } = await requireHodDashboardAccess();
   const { id } = await params;
   const headers = new Headers({
     "Cache-Control": "private, no-store",

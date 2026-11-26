@@ -2,12 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireDashboardAccess } from "../access";
+import { requireHodDashboardAccess } from "../access";
 import { isConversationId } from "./model";
 import { audioTypes, isSticker, maxAudioBytes } from "./media";
 
 export async function openDirectMessage(_previous: string | null, form: FormData) {
-  const { client } = await requireDashboardAccess();
+  const { client } = await requireHodDashboardAccess();
   const recipient = form.get("recipient");
   if (!isConversationId(recipient)) return "Conversation unavailable.";
 
@@ -17,7 +17,7 @@ export async function openDirectMessage(_previous: string | null, form: FormData
 }
 
 export async function sendConnectMessage(_previous: string | null, form: FormData) {
-  const { client, user } = await requireDashboardAccess();
+  const { client, user } = await requireHodDashboardAccess();
   const conversation = form.get("conversation");
   const clientId = form.get("clientId");
   const kind = form.get("kind") ?? "text";
@@ -52,14 +52,14 @@ export async function sendConnectMessage(_previous: string | null, form: FormDat
 }
 
 export async function readConnectChat(room: string, throughId: number) {
-  const { client } = await requireDashboardAccess();
+  const { client } = await requireHodDashboardAccess();
   if (!isConversationId(room) || !Number.isSafeInteger(throughId) || throughId < 1) return false;
   const { error } = await client.rpc("connect_read_chat", { room, through_id: throughId });
   return !error;
 }
 
 export async function changeConnectMessage(id: number, operation: "edit" | "delete", replacement: string) {
-  const { client } = await requireDashboardAccess();
+  const { client } = await requireHodDashboardAccess();
   if (!Number.isSafeInteger(id) || id < 1 || !["edit", "delete"].includes(operation)) {
     return "Message unavailable.";
   }

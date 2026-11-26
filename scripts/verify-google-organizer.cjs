@@ -15,10 +15,10 @@ process.env.GOOGLE_TOKEN_ENCRYPTION_KEY=Buffer.alloc(32,7).toString('base64');
 process.env.GOOGLE_CLIENT_ID='fixture-client';process.env.GOOGLE_CLIENT_SECRET='fixture-secret';
 process.env.GOOGLE_REDIRECT_URI='http://localhost:3000/api/google/callback';process.env.GOOGLE_ORGANIZER_EMAIL='organizer@example.com';
 process.env.NEXT_PUBLIC_SUPABASE_URL='https://fixture.invalid';process.env.SUPABASE_SECRET_KEY='fixture-server';
-let actor={id:'admin',session:'session-a',role:'Admin'}, row, states, cookie, identity, tokens, refreshError, failSave, revokeOK, meet, refreshHook, rpcCalls, providerCalls, scopesOK, identityError;
+let actor={id:'admin',session:'session-a',role:'Admin'}, row, states, cookie, identity, tokens, refreshError, failSave, revokeOK, meet, refreshHook, rpcCalls, providerCalls, scopesOK, identityError, lookupError, dbUpdates, libraryAvailable;
 const jar={get:()=>cookie?{value:cookie}:undefined,set:(_name,value)=>{cookie=value}};
 const base=()=>({version:0,email:null,subject:null,refresh_ciphertext:null,enabled:false,status:'disconnected',meet_supported:null,verified_at:null,revocation_failed:false});
-function reset(){actor={id:'admin',session:'session-a',role:'Admin'};row=base();states=new Map();cookie='';identity=null;tokens=null;refreshError=null;failSave=false;revokeOK=true;meet=true;refreshHook=null;rpcCalls=[];providerCalls=0;scopesOK=true;identityError=false;}
+function reset(){actor={id:'admin',session:'session-a',role:'Admin'};row=base();states=new Map();cookie='';identity=null;tokens=null;refreshError=null;failSave=false;revokeOK=true;meet=true;refreshHook=null;rpcCalls=[];providerCalls=0;scopesOK=true;identityError=false;lookupError=null;dbUpdates=0;libraryAvailable=true;}
 const database={
   rpc:async(_name,{p_action:a,p_admin:id,p_session:session,p_data:d})=>{
     rpcCalls.push(a);
@@ -29,15 +29,15 @@ const database={
     if(a==='disconnect'){const old=structuredClone(row);Object.assign(row,{version:row.version+1,refresh_ciphertext:null,enabled:false,status:'disconnected',meet_supported:null,revocation_failed:false});states.clear();return {data:old};}
     throw new Error('Unexpected RPC');
   },
-  from:()=>{let mutation=null,filters=[];const q={select:()=>q,update:v=>{mutation=v;return q},eq:(k,v)=>{filters.push([k,v]);return q},single:async()=>{
-    if(!filters.every(([k,v])=>k==='singleton'||row[k]===v))return {error:true};if(mutation)Object.assign(row,mutation);return {data:structuredClone(row)};
+  from:()=>{let mutation=null,filters=[];const q={select:()=>q,update:v=>{mutation=v;dbUpdates++;return q},eq:(k,v)=>{filters.push([k,v]);return q},single:async()=>{
+    if(lookupError)return {error:{code:lookupError,message:'fixture database message must not escape'}};if(!filters.every(([k,v])=>k==='singleton'||row[k]===v))return {error:true};if(mutation)Object.assign(row,mutation);return {data:structuredClone(row)};
   },then:(resolve,reject)=>q.single().then(resolve,reject)};return q;},
 };
 const staffClient={auth:{getUser:async()=>({data:{user:actor?{id:actor.id,email:'admin@enibrand.com'}:null}}),getClaims:async()=>({data:{claims:{sub:actor?.id,session_id:actor?.session}}})}};
 const providerStub={
   callEndingScope:'https://www.googleapis.com/auth/meetings.space.created',
   googleScopes:['openid','email','https://www.googleapis.com/auth/calendar.events.owned','https://www.googleapis.com/auth/calendar.calendars.readonly','https://www.googleapis.com/auth/meetings.space.settings'],
-  libraryReady:()=>true,scopesGranted:()=>scopesOK,isRevoked:e=>e?.response?.data?.error==='invalid_grant',
+  libraryReady:()=>libraryAvailable,scopesGranted:()=>scopesOK,isRevoked:e=>e?.response?.data?.error==='invalid_grant',
   ProviderFailure:class extends Error{constructor(kind){super(kind);this.kind=kind}},
   googleClient:()=>({getToken:async({codeVerifier})=>{providerCalls++;assert.equal(typeof codeVerifier,'string');return {tokens:tokens??{id_token:'fixture-id',access_token:'fixture-access',refresh_token:'fixture-refresh',scope:'all'}}},
     verifyIdToken:async({audience})=>{assert.equal(audience,'fixture-client');if(identityError)throw Error('Mock library rejected signature/audience/expiry');return {getPayload:()=>identity??{sub:'subject',email:'organizer@example.com',email_verified:true,nonce:[...states.values()].at(-1).nonce}}},
@@ -82,6 +82,22 @@ test('Successful callback verifies identity then encrypts and stores before repo
   reset();const f=await start();await finish(f);assert(row.enabled);assert.equal(row.status,'connected');assert.equal(crypto.decrypt(row.refresh_ciphertext,'refresh:organizer@example.com:subject'),'fixture-refresh');
   const result=await server.connectionStatus(true);assert.equal(result.state,'connected');assert.equal(result.meetSupported,true);assert(!JSON.stringify(result).includes('ciphertext'));assert(!JSON.stringify(result).includes('fixture-refresh'));
   await assert.rejects(()=>finish(f),e=>e.notice==='expired');
+});
+test('Status distinguishes setup failures, database lookup failures and an actual disconnected record',async()=>{
+  reset();const secret=process.env.GOOGLE_CLIENT_SECRET;delete process.env.GOOGLE_CLIENT_SECRET;
+  try{const status=await server.connectionStatus();assert.equal(status.state,'setup_required');assert(status.missingVariables.includes('GOOGLE_CLIENT_SECRET'));assert.equal(status.diagnosticCode,'GOOGLE_CONFIGURATION_MISSING')}
+  finally{process.env.GOOGLE_CLIENT_SECRET=secret}
+  reset();lookupError='42501';let status=await server.connectionStatus();assert.equal(status.state,'unavailable');assert.equal(status.diagnosticCode,'42501');assert(!JSON.stringify(status).includes('fixture database message'));
+  reset();status=await server.connectionStatus();assert.equal(status.state,'disconnected');assert.equal(status.email,null);
+});
+test('Production status rejects a localhost callback and missing Google library with safe codes',()=>{
+  const previous=process.env.NODE_ENV;try{process.env.NODE_ENV='production';assert.throws(()=>server.googleConfig(),e=>e.diagnosticCode==='GOOGLE_REDIRECT_URI_INVALID')}finally{if(previous===undefined)delete process.env.NODE_ENV;else process.env.NODE_ENV=previous}
+  reset();const ready=libraryAvailable;libraryAvailable=false;try{assert.throws(()=>server.googleConfig(),e=>e.diagnosticCode==='GOOGLE_AUTH_LIBRARY_MISSING')}finally{libraryAvailable=ready}
+});
+test('Settings status GET is a read-only database lookup and never refreshes organizer credentials',async()=>{
+  reset();const f=await start();await finish(f);providerCalls=0;dbUpdates=0;
+  const response=await status.GET();const result=await response.json();assert.equal(response.status,200);assert.equal(result.state,'connected');assert.equal(providerCalls,0);assert.equal(dbUpdates,0);
+  assert(!JSON.stringify(result).includes('refresh_ciphertext'));assert(!JSON.stringify(result).includes('fixture-refresh'));
 });
 
 test('Call-ending consent is opt-in and missing optional permission preserves base authorization',async()=>{

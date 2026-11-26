@@ -1,7 +1,7 @@
-import { requireDashboardAccess } from "../../../access";
+import { requireHodDashboardAccess } from "../../../access";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { client } = await requireDashboardAccess();
+  const { client } = await requireHodDashboardAccess();
   const { id } = await params;
   const headers = { "Cache-Control": "private, no-store" };
   if (!/^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i.test(id)) {

@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { requireDashboardAccess } from "../../access";
+import { requireHodDashboardAccess } from "../../access";
 import { isConversationId } from "../model";
 import { attachmentLimit, captionLimit, documentType, photoTypes } from "./config";
 
@@ -22,7 +22,7 @@ async function signatureMatches(file: File) {
 
 export async function POST(request: Request) {
   if (request.headers.get("origin") !== new URL(request.url).origin) return errorResponse("Request unavailable.", 403);
-  const { client, user } = await requireDashboardAccess();
+  const { client, user } = await requireHodDashboardAccess();
   const bodyLimit = attachmentLimit + 16000;
   const length = Number(request.headers.get("content-length"));
   if (length > bodyLimit) {

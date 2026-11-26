@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { recordConnectSignIn } from "../../lib/connect-enrollment";
-import { clearStaffSession, createStaffClient, getStaffRole } from "../../lib/staff-auth";
+import { clearStaffSession, createStaffClient, getActiveAccountRole } from "../../lib/staff-auth";
 
 const signInError = "Unable to sign in. Check your credentials and try again.";
 
@@ -26,22 +26,22 @@ export async function signInStaff(_previous: string | null, form: FormData) {
   });
   if (error || !data.session || !data.user) return signInError;
 
-  let authorized = false;
+  let accountRole: Awaited<ReturnType<typeof getActiveAccountRole>> = null;
   try {
-    authorized = Boolean(await getStaffRole(client, data.user));
+    accountRole = await getActiveAccountRole(client, data.user);
   } catch {
     return signInError;
   } finally {
-    if (!authorized) await clearStaffSession(client);
+    if (!accountRole) await clearStaffSession(client);
   }
 
-  if (!authorized) return signInError;
+  if (!accountRole) return signInError;
   try {
     await recordConnectSignIn(data.user.id);
   } catch {
     // A Connect outage should not block the rest of the staff workspace.
   }
-  redirect("/dashboard");
+  redirect(accountRole === "Employee" ? "/account/profile" : "/dashboard");
 }
 
 export async function signOutStaff() {

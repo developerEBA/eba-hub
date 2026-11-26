@@ -1,4 +1,4 @@
-import type { requireDashboardAccess } from "../access";
+import type { requireHodDashboardAccess } from "../access";
 import type { ConnectMessage } from "./model";
 
 export const historyPageSize = 30;
@@ -12,7 +12,7 @@ export function chatDayLabels() {
 }
 
 export async function loadChatHistory(
-  client: Awaited<ReturnType<typeof requireDashboardAccess>>["client"],
+  client: Awaited<ReturnType<typeof requireHodDashboardAccess>>["client"],
   conversation: string,
   before?: number,
 ) {

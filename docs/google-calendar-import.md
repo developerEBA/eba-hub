@@ -179,4 +179,4 @@ removed account loses private detail/Join access. Cancel in Google: upcoming rem
 it and Join denies access after synchronization. Confirm EBA edit/cancel/retry is
 denied, an uninvited account cannot retrieve it, and normal EBA meetings still export.
 Use real existing accounts only. Clean up in Google. No hosted migration, live Google
-requests, imports, reminder delivery or account creation were performed by the agent.
+requests, imports, reminder delivery or account creation were performed.

@@ -153,11 +153,10 @@ Mocked handler denial does not establish this pending live RLS result.
 
 Implementation checks passed: 9 reminder, 7 local-worker, 8 Part 1 calendar,
 24 Google synchronization, 16 organizer authorization and 4 rendering tests
-(68 total). Lint, TypeScript and production build passed. Isolated Playwright
-rendering of the actual server bell with fixture data opened correctly at 1280px
-and 390px, with protected Join links, no horizontal overflow and no page errors.
-Browser plugin was unavailable; existing Playwright MCP was used. This fixture
-test does not verify a signed-in Supabase session or live delivery.
+(68 total). Lint, TypeScript and production build passed. Isolated rendering of
+the actual server bell with fixture data opened at 1280px and 390px, with
+protected Join links, no horizontal overflow and no page errors. This fixture
+does not verify a signed-in Supabase session or live delivery.
 
 ## Evidence boundary
 

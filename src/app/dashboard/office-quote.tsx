@@ -10,7 +10,6 @@ const quotes = [
 
 export function OfficeQuote() {
   const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(true);
 
   useEffect(() => {
@@ -22,25 +21,17 @@ export function OfficeQuote() {
   }, []);
 
   useEffect(() => {
-    if (paused || reducedMotion) return;
+    if (reducedMotion) return;
     const timer = window.setInterval(() => {
       setIndex((current) => (current + 1) % quotes.length);
     }, 8000);
     return () => window.clearInterval(timer);
-  }, [paused, reducedMotion]);
+  }, [reducedMotion]);
 
   return (
     <div className="eba-dashboard__quote">
       <blockquote aria-live={reducedMotion ? "polite" : "off"}>“{quotes[index]}”</blockquote>
-      {reducedMotion ? (
-        <button type="button" onClick={() => setIndex((current) => (current + 1) % quotes.length)}>
-          Next quote
-        </button>
-      ) : (
-        <button type="button" onClick={() => setPaused(!paused)}>
-          {paused ? "Resume quotes" : "Pause quotes"}
-        </button>
-      )}
+      <button type="button" onClick={() => setIndex((current) => (current + 1) % quotes.length)} aria-label="Show next quote">Next quote</button>
     </div>
   );
 }

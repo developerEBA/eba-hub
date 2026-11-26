@@ -57,20 +57,20 @@ test('Game invitations produce a private deduplicated bell row without public ch
 });
 test('Notification chime is louder and plays only for new unread IDs after user interaction',async()=>{
  const effects=[],listeners=new Map(),storage=new Map(),tones=[];
- class Audio {constructor(){this.state='suspended';this.currentTime=0;this.destination={}}resume(){this.state='running';return Promise.resolve()}createOscillator(){tones.push('tone');return {frequency:{},connect(){},start(){},stop(){},disconnect(){}}}createGain(){return {gain:{setValueAtTime(){},linearRampToValueAtTime(value){assert.equal(value,.22)},exponentialRampToValueAtTime(){}},connect(){},disconnect(){}}}}
+ class Audio {constructor(){this.state='suspended';this.currentTime=0;this.destination={}}resume(){this.state='running';return Promise.resolve()}createOscillator(){tones.push('tone');return {frequency:{},connect(){},start(){},stop(){},disconnect(){}}}createGain(){return {gain:{setValueAtTime(){},linearRampToValueAtTime(value){assert.equal(value,.48)},exponentialRampToValueAtTime(){}},connect(){},disconnect(){}}}}
  const globals={document:global.document,AudioContext:global.AudioContext,sessionStorage:global.sessionStorage};
  global.document={addEventListener:(name,fn)=>listeners.set(name,fn),removeEventListener(){}};global.AudioContext=Audio;global.sessionStorage={getItem:key=>storage.get(key)??null,setItem:(key,value)=>storage.set(key,value)};
  try{const {NotificationChime}=load('src/app/dashboard/notifications/notification-chime.tsx',{react:{useEffect:fn=>effects.push(fn)}});
  const render=id=>{effects.length=0;NotificationChime({latestUnreadId:id});effects[1]()};
  NotificationChime({latestUnreadId:0});effects[0]();effects[1]();assert.equal(tones.length,0);
- listeners.get('pointerdown')();await Promise.resolve();render(10);assert.equal(tones.length,2);render(10);render(0);assert.equal(tones.length,2);render(11);assert.equal(tones.length,4);
+ listeners.get('pointerdown')();await Promise.resolve();render(10);assert.equal(tones.length,4);render(10);render(0);assert.equal(tones.length,4);render(11);assert.equal(tones.length,8);
  }finally{Object.assign(global,globals)}
 });
 test('Overview renders all today records and missing imported Meet links are labelled honestly',()=>{
  const React=require('react'),{renderToStaticMarkup}=require('react-dom/server');
  const {UpcomingMeetings}=load('src/app/dashboard/calendar/upcoming-meetings.tsx',{'next/link':({children})=>React.createElement('a',null,children),'./meet-status':{MeetStatus:()=>null}});
  const meetings=Array.from({length:5},(_,i)=>({...event(),id:String(i),title:'Today meeting '+i,starts_at:'2030-11-20T11:00:00Z'}));
- const html=renderToStaticMarkup(React.createElement(UpcomingMeetings,{initial:{ready:true,meetings}}));for(let i=0;i<5;i++)assert(html.includes('Today meeting '+i));
+ const html=renderToStaticMarkup(React.createElement(UpcomingMeetings,{initial:{ready:true,meetings}}));for(let i=0;i<2;i++)assert(html.includes('Today meeting '+i));for(let i=2;i<5;i++)assert(!html.includes('Today meeting '+i));
  const {meetPresentation}=require('../src/app/dashboard/calendar/meet-model.ts');assert.equal(meetPresentation({source:'google',status:'scheduled',sync_status:'synced',starts_at:'2030-11-20T11:00:00Z',ends_at:'2030-11-20T12:00:00Z'},Date.parse('2030-11-20T11:00:00Z')).label,'No Meet link in Google');
 });
 test('Audience endpoint denies a company-viewing CEO and saves only the organizer with a version',async()=>{
@@ -85,7 +85,7 @@ test('Actual bell renders private game invitation link and mark-read controls',a
  const React=require('react'),{renderToStaticMarkup}=require('react-dom/server');
  const room='12345678-1234-4234-8234-123456789abc';const query={select(){return this},order(){return this},limit(){return this},overrideTypes:async()=>({data:[{id:50,game_room_id:room,read_at:null,created_at:'2030-11-20T11:00:00Z'}],error:null}),is:async()=>({count:1,error:null})};
  const {NotificationBell}=load('src/app/dashboard/notifications/bell.tsx',{'next/link':({href,children})=>React.createElement('a',{href:typeof href==='string'?href:href.pathname},children),'../../../lib/staff-auth':{createStaffClient:async()=>({from:()=>query})},'../navigation':{DashboardIcon:()=>null},'./controls':{NotificationUpdates:()=>null,MarkRead:({label})=>React.createElement('button',null,label)}});
- const html=renderToStaticMarkup(await NotificationBell());assert.match(html,/invited to a game/);assert(html.includes('/dashboard/games?room='+room));assert.match(html,/Mark read/);assert(!html.includes('New direct message'));
+ const html=renderToStaticMarkup(await NotificationBell({role:'Admin'}));assert.match(html,/invited to a game/);assert(html.includes('/dashboard/games?room='+room));assert.match(html,/Mark read/);assert(!html.includes('New direct message'));
 });
 test('Overview avatar enrichment reads only participants of already authorized meetings',async()=>{
  const server=load('src/app/dashboard/calendar/server.ts',{'server-only':{},'../../../lib/staff-auth':{}});

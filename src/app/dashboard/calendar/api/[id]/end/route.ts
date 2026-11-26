@@ -2,6 +2,7 @@ import { calendarAuth,calendarAdmin,calendarHeaders,findMeeting } from "../../..
 import { uuidPattern } from "../../../model";
 import { joinWindow } from "../../../join-window";
 import { runCallEnding } from "../../../../../../lib/calendar-google/call-ending";
+import { endPermission } from "../../../../../../lib/calendar-google/end-permission";
 export const maxDuration=60;
 export async function POST(request:Request,{params}:{params:Promise<{id:string}>}){
  if(request.headers.get("origin")!==new URL(request.url).origin)return Response.json({error:"Forbidden"},{status:403,headers:calendarHeaders});
@@ -11,6 +12,9 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
  const found=await findMeeting(auth.client,auth.user.id,id,auth.role);
  if(found.error)return Response.json({error:"Meeting unavailable."},{status:503,headers:calendarHeaders});
  if(!found.data||found.data.status!=="scheduled")return Response.json({error:"Meeting unavailable."},{status:404,headers:calendarHeaders});
+ if(found.data.organizer_id!==auth.user.id)return Response.json({error:"Only this occurrence's authorized Admin organizer can end it."},{status:403,headers:calendarHeaders});
+ const permission=await endPermission(id,auth.user.id);
+ if(permission!=="eligible")return Response.json({error:permission==="foreign_owner"?"This meeting is not owned by the configured Google organizer.":"Meeting management setup is unavailable."},{status:permission==="foreign_owner"||permission==="not_manager"?403:503,headers:calendarHeaders});
  if(joinWindow(found.data).state==="waiting")return Response.json({error:"This occurrence has not opened for joining."},{status:409,headers:calendarHeaders});
  const db=calendarAdmin();if(!db)return Response.json({error:"Meeting controls unavailable."},{status:503,headers:calendarHeaders});
  const requested=await db.rpc("calendar_call_end_control",{p_action:"request",p_id:id,p_actor:auth.user.id});
@@ -19,6 +23,7 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
  const latest=await findMeeting(auth.client,auth.user.id,id,auth.role);
  const state=latest.data?.call_end_status??"pending";
  const message=state==="ended"?"EBA joining is closed. Google reports that the observed call has ended."
+  :state==="reconnect_required"?"EBA joining is closed. Reconnect Google required: an Admin must authorize call-ending permission in Settings, then retry."
   :state==="no_active_call"?"EBA joining is closed. Google reported no active call."
   :state==="unavailable"?"EBA joining is closed, but Google call termination is unavailable. Use the eligible Google host's End meeting for all control."
   :state==="shared_space"?"EBA joining is closed. Another occurrence is using this Meet link, so Google termination was blocked."

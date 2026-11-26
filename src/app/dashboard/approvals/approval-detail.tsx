@@ -42,7 +42,7 @@ function fileUrl(id: string, name: string, preview = false) {
   return "/dashboard/approvals/attachments/" + id + "?name=" + encodeURIComponent(name) + (preview ? "&preview=1" : "");
 }
 
-export function ApprovalDetail({ request }: { request: RequestDetail }) {
+export function ApprovalDetail({ request, canDecide = true }: { request: RequestDetail; canDecide?: boolean }) {
   const externalUrl = validatedExternalUrl(request.external_url);
   const files = request.attachment_names.filter(isAttachmentName);
   const preview = request.request_type === "graphics"
@@ -90,7 +90,7 @@ export function ApprovalDetail({ request }: { request: RequestDetail }) {
           {request.decision_note && <p>{request.decision_note}</p>}
         </div>
       )}
-      <ReviewActions key={request.id} id={request.id} canDecide={request.status === "pending"} />
+      {canDecide && <ReviewActions key={request.id} id={request.id} canDecide={request.status === "pending"} />}
     </>
   );
 }

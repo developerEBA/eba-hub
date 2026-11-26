@@ -178,7 +178,7 @@ export function MediaComposer({ conversation, members, canSend }: {
   if (!canSend && !edit) return null;
 
   return (
-    <div className="eba-connect__compose-box">
+    <div className="eba-connect__compose-box" data-announcement-block={asking || recording || Boolean(clip) || sending || undefined}>
       {edit && <EditComposer key={edit.id} edit={edit} cancel={() => setEdit(null)} />}
       <div hidden={Boolean(edit) || !canSend}>
         <div hidden={recording || Boolean(clip)}>

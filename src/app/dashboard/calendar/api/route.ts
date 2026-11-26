@@ -3,7 +3,7 @@ import { uuidPattern, validateInput, type CalendarView, type Meeting } from "../
 
 export async function GET(request: Request) {
   const auth = await calendarAuth();
-  if (!auth) return Response.json({ error: "Sign in with an active CEO or Admin account." }, { status: 401, headers: calendarHeaders });
+  if (!auth) return Response.json({ error: "Sign in with an active CEO, Admin or assigned HOD account." }, { status: 401, headers: calendarHeaders });
   const view = new URL(request.url).searchParams.get("view");
   const result = await loadMeetings(auth.client, auth.user.id, (["week","next","upcoming","today"].includes(view ?? "") ? view : "week") as CalendarView,200,auth.role);
   if(result.ready&&view==="today"&&new URL(request.url).searchParams.get("people")==="1"){
@@ -26,6 +26,7 @@ export async function POST(request: Request) {
     if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Invalid meeting request.");
     if (typeof body.requestId !== "string" || !uuidPattern.test(body.requestId)) throw new Error("Invalid request ID.");
     if (!["create","update","cancel"].includes(String(body.command)) || !["one","remaining"].includes(String(body.scope))) throw new Error("Invalid meeting action.");
+    if (auth.role === "HOD" && body.command !== "create") return Response.json({ error: "HOD accounts can create department meetings but cannot edit or cancel meetings." }, { status: 403, headers: calendarHeaders });
     let existing: Meeting | null = null;
     if (body.command !== "create") {
       if (typeof body.id !== "string" || !uuidPattern.test(body.id)) throw new Error("Invalid meeting ID.");
@@ -38,16 +39,19 @@ export async function POST(request: Request) {
     }
     const input = body.command === "cancel" ? null : validateInput({ ...body, ...(existing && body.scope === "one" ? { frequency: "once", until: null } : {}) });
     if (input) {
-      const directory = await loadDirectory();
+      const directory = await loadDirectory(auth.role, auth.departments);
       if (!directory.ready) return Response.json({ error: setupMessage }, { status: 503, headers: calendarHeaders });
       if (input.attendees.some((id) => !directory.people.some((person) => person.user_id === id)) || input.departments.some((id) => !directory.departments.some((department) => department.id === id))) throw new Error("Select only active attendees and departments with real assignments.");
+      if (auth.role === "HOD" && (!input.departments.length || input.departments.some((department) => !auth.departments.includes(department)))) throw new Error("Choose at least one of your currently assigned departments.");
     }
-    const { data, error } = await admin.rpc("calendar_mutate", {
+    const { data, error } = auth.role === "HOD" ? await admin.rpc("calendar_hod_create", {
+      p_actor: auth.user.id, p_request: body.requestId, p_payload: input,
+    }) : await admin.rpc("calendar_mutate", {
       p_actor: auth.user.id, p_request: body.requestId, p_command: body.command,
       p_occurrence: existing?.id ?? null, p_scope: body.scope, p_version: existing ? body.version : null, p_payload: input ?? {},
     });
     if (error) {
-      const known = /Meeting changed|call-ending check in progress|Select |Weekly end date|Keep the series|Request ID was already|This occurrence|Invalid title|department has no/i.test(error.message);
+      const known = /Meeting changed|call-ending check in progress|Select |Weekly end date|Keep the series|Request ID was already|This occurrence|Invalid title|department has no|Required participants would exceed the 100-attendee limit/i.test(error.message);
       return Response.json({ error: known ? error.message : "Calendar could not save this change. Confirm the migration and server prerequisites, then try again." }, { status: /Meeting changed|call-ending check in progress/.test(error.message) ? 409 : known ? 400 : 503, headers: calendarHeaders });
     }
     return Response.json({ id: data, message: body.command === "cancel" ? "Meeting cancelled locally. Google cancellation is queued." : "Meeting saved. Google Meet preparation is queued." }, { headers: calendarHeaders });

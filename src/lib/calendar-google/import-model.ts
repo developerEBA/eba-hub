@@ -4,7 +4,10 @@ export function incomingEvent(event:GoogleEvent,email:string) {
   if(!event.id || event.extendedProperties?.private?.ebaOccurrence)return null;
   if(event.status==="cancelled")return {id:event.id,cancelled:true};
   const start=event.start?.dateTime,end=event.end?.dateTime;
-  if(event.organizer?.email!==email || event.attendeesOmitted || !start || !end
+  // External events are intentionally ignored; the connected account cannot
+  // add mandatory participants or disclose those events to EBA Hub readers.
+  if(event.organizer?.email?.toLowerCase()!==email.toLowerCase())return null;
+  if(event.attendeesOmitted || !start || !end
     || !Number.isFinite(Date.parse(start)) || !Number.isFinite(Date.parse(end))
     || Date.parse(end)<=Date.parse(start) || Date.parse(end)-Date.parse(start)>86400000)return {id:event.id,cancelled:true};
   const url=[event.hangoutLink,...(event.conferenceData?.entryPoints??[]).filter(p=>p.entryPointType==="video").map(p=>p.uri)].find(validMeetUrl)??null;

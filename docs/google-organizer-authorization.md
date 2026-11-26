@@ -282,8 +282,8 @@ passwords, tokens, codes, or callback URLs into chat or test reports.
    invalid-grant response. No token details should appear in response JSON, HTML,
    client bundles, application logs or console output.
 
-Live Google acceptance and hosted migration verification were not run by the
-implementation agent. Record their results after completing the operator steps.
+Live Google acceptance and hosted migration verification remain outstanding.
+Record their results after completing the operator steps.
 
 ### Implementation check results
 
@@ -294,8 +294,8 @@ implementation agent. Record their results after completing the operator steps.
 | `npx tsc --noEmit` | Passed using the explicit library adapter interface |
 | `npm run build` | Blocked: `google-auth-library` is not installed; no other reported compile errors after removing incompatible route runtime declarations |
 | `npm run build -- --webpack` | Also blocked by the missing Google library |
-| Rendered Settings card | Actual React component, mocked status, Playwright at 1280×900 and 390×844; disconnected → refresh → connected and Admin reconnect controls; CEO has zero mutation controls; no horizontal overflow or runtime errors |
-| Browser environment | Browser plugin not available; existing Playwright MCP used with an isolated `about:blank` fixture, not a signed-in live app |
+| Rendered Settings card | Actual React component and mocked status at 1280×900 and 390×844; disconnected → refresh → connected and Admin reconnect controls; CEO has zero mutation controls; no horizontal overflow or runtime errors |
+| Browser scope | Isolated UI fixture, not a signed-in live app |
 | 21st UI review | No blocking findings; informational color-token advice only, matching the existing dashboard palette |
 | Hosted SQL / Google OAuth | Not run; operator migration/install/consent still required |
 

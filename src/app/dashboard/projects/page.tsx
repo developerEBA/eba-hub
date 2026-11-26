@@ -1,8 +1,11 @@
 import { Suspense } from "react";
 import DashboardLoading from "../loading";
 import Link from "next/link";
-import { requireDashboardAccess } from "../access";
+import { requireHodDashboardAccess } from "../access";
 import { DashboardShell } from "../dashboard-shell";
+import { departmentNames } from "../connect/model";
+import { HodPlanEditor } from "./hod-plan-editor";
+import { loadPlanAssignees } from "./assignees";
 
 const departments = [
   ["graphics", "Graphics"],
@@ -31,15 +34,24 @@ function periodStart(value: Query["date"], period: Period) {
 }
 
 type Plan = {
+  id: string;
+  department: string;
+  period_kind: Period;
+  period_start: string;
   title: string;
   summary: string;
-  status: "submitted";
+  status: "draft"|"submitted";
+  version: number;
+  created_by: string|null;
   department_plan_items: {
     id: string;
     title: string;
     owner: string;
+    assignee_user_id: string|null;
     due_date: string | null;
     status: string;
+    completed_at?: string|null;
+    completed_by?: string|null;
   }[];
   department_plan_attachments: { id: string; filename: string }[];
 };
@@ -53,9 +65,26 @@ export default function Projects({ searchParams }: { searchParams: Promise<Query
 }
 
 async function ProtectedProjects({ searchParams }: { searchParams: Promise<Query> }) {
-  const { client, role } = await requireDashboardAccess();
+  const { client, role, user, departments: assignedDepartments } = await requireHodDashboardAccess();
 
   const query = await searchParams;
+  if(role==="HOD"){
+    const selected=typeof query.department==="string"&&assignedDepartments.includes(query.department)?query.department:assignedDepartments.length===1?assignedDepartments[0]:null;
+    const period=periods.find((key)=>key===query.period)??"week";
+    const start=periodStart(query.date,period);
+    const result=selected?await client.from("department_plans")
+      .select("id,title,summary,department,period_kind,period_start,status,version,created_by,department_plan_items(id,title,owner,assignee_user_id,due_date,status,completed_at,completed_by),department_plan_attachments(id,filename)")
+      .eq("department",selected).eq("period_kind",period).eq("period_start",start)
+      .order("id",{referencedTable:"department_plan_items"}).order("filename",{referencedTable:"department_plan_attachments"}):null;
+    const assignees=selected?await loadPlanAssignees([selected]):{ready:false,people:[]};
+    const plans=(result?.data??[]) as Plan[];
+    return <DashboardShell role="HOD" section="projects"><section className="eba-plans" aria-labelledby="hod-plans-title">
+      <header className="eba-plans__hero"><p className="eba-plans__eyebrow">Your department workspace</p><h1 id="hod-plans-title">Department plans</h1><p>Submitted plans for your authorized department assignments.</p></header>
+      <nav className="eba-plans__tabs" aria-label="Assigned departments">{assignedDepartments.map((department)=><Link key={department} href={{pathname:"/dashboard/projects",query:{department,period,date:start}}} aria-current={selected===department?"page":undefined}>{departmentNames[department]??department}</Link>)}</nav>
+      <form className="eba-plans__filters" action="/dashboard/projects"><label>Period<select name="period" defaultValue={period}><option value="week">Week</option><option value="month">Month</option><option value="year">Year</option></select></label><label>Date within period<input name="date" type="date" defaultValue={start} required/></label>{selected&&<input type="hidden" name="department" value={selected}/>}<button type="submit">View plans</button></form>
+      {!selected?<p>Select a department to create or view its plan. No department is selected automatically when several are assigned.</p>:result?.error?<p role="alert">Department plans could not be loaded. Retry the page after checking access and migration status.</p>:!plans.length?<><p>No plan exists for this department and period yet.</p><HodPlanEditor department={selected} period={period} periodStart={start} existing={null} assignees={assignees.people} assigneesReady={assignees.ready}/></>:plans.map((plan)=><article className="eba-plans__card" key={plan.id}><div className="eba-plans__card-heading"><div><p className="eba-plans__eyebrow">{departmentNames[plan.department]??plan.department}</p><h2>{plan.title}</h2></div><span>{plan.status==="submitted"?"Submitted":"Draft"}</span></div><p>{plan.summary||"No summary was supplied."}</p><h3>Work items</h3>{!plan.department_plan_items?.length?<p>No work items listed.</p>:<ul className="eba-plans__items">{plan.department_plan_items.map((item)=><li key={item.id}><strong>{item.title}</strong><span>{item.owner} · {item.due_date??"No due date"} · {item.status}{item.completed_at?` · Completed ${item.completed_at.slice(0,10)}`:""}</span></li>)}</ul>}<h3>Private attachments</h3>{!plan.department_plan_attachments?.length?<p>No attachments.</p>:<ul className="eba-plans__items">{plan.department_plan_attachments.map((file)=><li key={file.id}><a href={`/dashboard/projects/attachments/${file.id}`}>{file.filename}</a></li>)}</ul>}{plan.status==="draft"&&plan.created_by===user.id?<HodPlanEditor department={selected} period={period} periodStart={start} existing={{...plan,department_plan_items:plan.department_plan_items.map((item)=>({...item,assignee_user_id:item.assignee_user_id}))}} assignees={assignees.people} assigneesReady={assignees.ready}/>:plan.status==="draft"?<p role="status">This draft predates HOD editing and has no verified author. It is left unchanged; contact an Admin to resolve the period conflict.</p>:<p className="eba-plans__notice">Submitted plans are read-only. No submitted or historical plan is overwritten.</p>}</article>)}
+    </section></DashboardShell>;
+  }
   const [department, label] = departments.find(([key]) => key === query.department) ?? departments[0];
   const period = periods.find((key) => key === query.period) ?? "week";
   const start = periodStart(query.date, period);

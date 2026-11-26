@@ -21,10 +21,14 @@ export const notices: Record<Notice, string> = {
   revocation_failed: "Local access is disabled, but Google revocation could not be confirmed. Remove the app from the organizer’s Google account permissions.",
   forbidden: "Only an active Admin can manage the organizer connection.",
 };
-export class ConnectionFailure extends Error { constructor(public notice: Notice) { super(notice); } }
+export class ConnectionFailure extends Error {
+  constructor(public notice: Notice, public diagnosticCode?: string, public missingVariables?: string[]) { super(notice); }
+}
 export type GoogleStatus = {
   state: "setup_required" | "unavailable" | "disconnected" | "connected" | "revoked" | "verification_failed";
   email: string | null; meetSupported: boolean | null; verifiedAt: string | null; revocationFailed: boolean;
+  diagnosticCode?: string;
+  missingVariables?: string[];
 };
 type Connection = { version: number; email: string | null; subject: string | null; refresh_ciphertext: string | null;
   enabled: boolean; status: string; meet_supported: boolean | null; verified_at: string | null; revocation_failed: boolean };
@@ -46,19 +50,24 @@ export async function googleActor(adminOnly = false) {
 type Actor = NonNullable<Awaited<ReturnType<typeof googleActor>>>;
 function database() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new ConnectionFailure("unavailable");
+  const missing = [!url && "NEXT_PUBLIC_SUPABASE_URL", !key && "SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY"].filter(Boolean) as string[];
+  if (missing.length) throw new ConnectionFailure("unavailable", "SUPABASE_CONFIGURATION_MISSING", missing);
+  if (!url || !key) throw new ConnectionFailure("unavailable", "SUPABASE_CONFIGURATION_MISSING");
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 export function googleConfig() {
   const id = process.env.GOOGLE_CLIENT_ID, secret = process.env.GOOGLE_CLIENT_SECRET;
   const redirect = process.env.GOOGLE_REDIRECT_URI, email = process.env.GOOGLE_ORGANIZER_EMAIL;
-  if (!id || !secret || !redirect || !email || !/^[^@\s]+@[^@\s]+$/.test(email)) throw new ConnectionFailure("unavailable");
-  const url = new URL(redirect);
+  const missing = [!id && "GOOGLE_CLIENT_ID", !secret && "GOOGLE_CLIENT_SECRET", !redirect && "GOOGLE_REDIRECT_URI", !email && "GOOGLE_ORGANIZER_EMAIL", !process.env.GOOGLE_TOKEN_ENCRYPTION_KEY && "GOOGLE_TOKEN_ENCRYPTION_KEY"].filter(Boolean) as string[];
+  if (missing.length) throw new ConnectionFailure("unavailable", "GOOGLE_CONFIGURATION_MISSING", missing);
+  if (!email || !/^[^@\s]+@[^@\s]+$/.test(email)) throw new ConnectionFailure("unavailable", "GOOGLE_ORGANIZER_EMAIL_INVALID");
+  let url: URL;
+  try { url = new URL(redirect!); } catch { throw new ConnectionFailure("unavailable", "GOOGLE_REDIRECT_URI_INVALID"); }
   if (url.pathname !== "/api/google/callback" || url.search || url.hash || url.username || url.password ||
-    (url.protocol !== "https:" && !(url.protocol === "http:" && url.hostname === "localhost" && process.env.NODE_ENV !== "production"))) throw new ConnectionFailure("unavailable");
-  encryptionKey();
-  if (!libraryReady()) throw new ConnectionFailure("unavailable");
-  return { id, secret, redirect, email, origin: url.origin };
+    (url.protocol !== "https:" && !(url.protocol === "http:" && url.hostname === "localhost" && process.env.NODE_ENV !== "production"))) throw new ConnectionFailure("unavailable", "GOOGLE_REDIRECT_URI_INVALID");
+  try { encryptionKey(); } catch { throw new ConnectionFailure("unavailable", "GOOGLE_TOKEN_ENCRYPTION_KEY_INVALID"); }
+  if (!libraryReady()) throw new ConnectionFailure("unavailable", "GOOGLE_AUTH_LIBRARY_MISSING");
+  return { id: id!, secret: secret!, redirect: redirect!, email, origin: url.origin };
 }
 export function sameOrigin(request: Request) {
   // Trust configured redirect origin, never caller-controlled Host/Forwarded headers.
@@ -78,7 +87,19 @@ async function rpc(action: string, actor: Actor, data: Record<string, unknown>) 
 }
 async function readConnection(): Promise<Connection> {
   const { data, error } = await database().from("google_organizer_connection").select("version,email,subject,refresh_ciphertext,enabled,status,meet_supported,verified_at,revocation_failed").eq("singleton", true).single();
-  if (error || !data) throw new ConnectionFailure("unavailable");
+  if (error) throw new ConnectionFailure("unavailable", safeDatabaseCode(error.code) ?? "GOOGLE_CONNECTION_LOOKUP_FAILED");
+  if (!data) throw new ConnectionFailure("unavailable", "GOOGLE_CONNECTION_ROW_MISSING");
+  return data;
+}
+type ConnectionStatusRow = Pick<Connection, "email" | "enabled" | "status" | "meet_supported" | "verified_at" | "revocation_failed">;
+function safeDatabaseCode(code: unknown) {
+  return typeof code === "string" && /^(?:[A-Z0-9]{5}|PGRST[0-9]{3})$/.test(code) ? code : null;
+}
+async function readConnectionStatus(): Promise<ConnectionStatusRow> {
+  const { data, error } = await database().from("google_organizer_connection")
+    .select("email,enabled,status,meet_supported,verified_at,revocation_failed").eq("singleton", true).single();
+  if (error) throw new ConnectionFailure("unavailable", safeDatabaseCode(error.code) ?? "GOOGLE_CONNECTION_LOOKUP_FAILED");
+  if (!data) throw new ConnectionFailure("unavailable", "GOOGLE_CONNECTION_ROW_MISSING");
   return data;
 }
 export async function beginAuthorization(actor: Actor) {
@@ -160,10 +181,13 @@ export async function organizerAccess() {
 }
 export async function connectionStatus(check = false): Promise<GoogleStatus> {
   const empty = { email: null, meetSupported: null, verifiedAt: null, revocationFailed: false };
-  try { googleConfig(); } catch { return { ...empty, state: "setup_required" }; }
+  try { googleConfig(); } catch (error) {
+    const failure = error instanceof ConnectionFailure ? error : null;
+    return { ...empty, state: "setup_required", diagnosticCode: failure?.diagnosticCode ?? "GOOGLE_CONFIGURATION_INVALID", missingVariables: failure?.missingVariables };
+  }
   try {
-    let row = await readConnection();
-    if (row.email && row.email !== process.env.GOOGLE_ORGANIZER_EMAIL) return { ...empty, state: "setup_required" };
+    let row: ConnectionStatusRow | Connection = check ? await readConnection() : await readConnectionStatus();
+    if (row.email && row.email !== process.env.GOOGLE_ORGANIZER_EMAIL) return { ...empty, state: "setup_required", diagnosticCode: "GOOGLE_ORGANIZER_IDENTITY_MISMATCH" };
     if (row.enabled && check) {
       try {
         const access = await organizerAccess(), meet = await calendarSupportsMeet(access.accessToken);
@@ -178,7 +202,10 @@ export async function connectionStatus(check = false): Promise<GoogleStatus> {
     }
     return { state: row.enabled ? "connected" : row.status === "revoked" ? "revoked" : "disconnected",
       email: row.email, meetSupported: row.enabled ? row.meet_supported : null, verifiedAt: row.verified_at, revocationFailed: row.revocation_failed };
-  } catch { return { ...empty, state: "unavailable" }; }
+  } catch (error) {
+    const failure = error instanceof ConnectionFailure ? error : null;
+    return { ...empty, state: "unavailable", diagnosticCode: failure?.diagnosticCode ?? "GOOGLE_STATUS_LOOKUP_FAILED", missingVariables: failure?.missingVariables };
+  }
 }
 export async function disconnectOrganizer(actor: Actor): Promise<Notice> {
   if (actor.role !== "Admin") throw new ConnectionFailure("forbidden");

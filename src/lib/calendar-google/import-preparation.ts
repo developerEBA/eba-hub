@@ -1,6 +1,24 @@
 import { createHash } from "node:crypto";
 import type { GoogleEvent,GoogleMeetProvider } from "./provider";
 import { incomingEvent } from "./import-model";
+
+export async function ensureRequiredInvitations(provider:GoogleMeetProvider,event:GoogleEvent,email:string,requiredEmails:string[],removeEmails:string[]=[] ) {
+ const normalized=incomingEvent(event,email);
+ if(!normalized||"cancelled" in normalized)return {event,updated:false,eligible:false};
+ const originalEmails=(event.attendees??[]).map(person=>person.email.toLowerCase());
+ const current=new Set(originalEmails);
+ const removals=new Set(removeEmails.map(value=>value.trim().toLowerCase()).filter(Boolean));
+ const missing=[...new Set(requiredEmails.map(value=>value.trim().toLowerCase()).filter(value=>value&&value!==email.toLowerCase()&&!current.has(value)))];
+ const kept=(event.attendees??[]).filter(person=>!removals.has(person.email.toLowerCase()));
+ if(!missing.length&&!removals.size)return {event,updated:false,eligible:true,preexistingEmails:originalEmails};
+ if(!event.etag||event.attendeesOmitted)return {event,updated:false,eligible:false};
+ const attendees=[...kept,...missing.map(value=>({email:value,responseStatus:"needsAction"}))];
+ try{
+  const updated=await provider.patchEvent(event.id,event.etag,{attendees});
+  const confirmed=new Set((updated.attendees??[]).map(person=>person.email.toLowerCase()));
+  return {event:updated,updated:true,eligible:missing.every(value=>confirmed.has(value))&&[...removals].every(value=>!confirmed.has(value)),preexistingEmails:originalEmails};
+ }catch{return {event,updated:false,eligible:false,preexistingEmails:originalEmails};}
+}
 // Only the worker's already-imported, organizer-owned event is eligible. Never
 // create a replacement event or change guests/title/time. ETags protect edits.
 export async function prepareImportedMeeting(provider:GoogleMeetProvider,event:GoogleEvent,email:string,now=Date.now()){

@@ -1,10 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireDashboardAccess } from "../access";
+import { requireHodDashboardAccess } from "../access";
 
 export async function markNotification(_previous: string | null, form: FormData) {
-  const { client, user } = await requireDashboardAccess();
+  const { client, user } = await requireHodDashboardAccess();
   const id = form.get("id");
   let query = client.from("hub_notifications").update({ read_at: new Date().toISOString() })
     .eq("recipient_id", user.id).is("read_at", null);

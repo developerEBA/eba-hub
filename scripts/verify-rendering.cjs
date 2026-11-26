@@ -6,14 +6,29 @@ test('Tailwind watches only application source, excluding generated snapshots an
   const {compile}=require('@tailwindcss/node'),{Scanner}=require('@tailwindcss/oxide');
   const filename=path.join(root,'src/app/globals.css'),sourceRoot=path.join(root,'src');
   const compiler=await compile(fs.readFileSync(filename,'utf8'),{from:filename,base:path.dirname(filename),onDependency(){}});
-  assert(compiler.root&&compiler.root!=='none','Use an explicit application source root');
-  const scanner=new Scanner({sources:[{...compiler.root,negated:false},...compiler.sources]});
+  assert.equal(compiler.root,null,'Use the explicit @source directive instead of Tailwind auto-detection');
+  const scanner=new Scanner({sources:compiler.sources});
   const candidates=scanner.scan();
   const insideSource=filename=>{const relative=path.relative(sourceRoot,path.resolve(filename));return !relative.startsWith('..'+path.sep)&&relative!=='..'&&!path.isAbsolute(relative)};
   assert(scanner.files.length>0);assert(scanner.files.every(insideSource));
   assert(scanner.globs.every(glob=>insideSource(glob.base)),'Root context dependencies can restart the HMR feedback loop');
   assert(scanner.files.some(file=>file.endsWith(path.join('src','app','layout.tsx'))));
   const css=compiler.build(candidates);assert(css.includes('.min-h-full'));assert(css.includes('.antialiased'));
+});
+
+test('Production Tailwind reset is emitted as valid CSS and sign-in controls keep EBA styles',async()=>{
+  const {compile}=require('@tailwindcss/node');
+  const filename=path.join(root,'src/app/globals.css');
+  const compiler=await compile(fs.readFileSync(filename,'utf8'),{from:filename,base:path.dirname(filename),onDependency(){}});
+  const css=compiler.build(['min-h-full','antialiased']);
+  assert.doesNotMatch(css,/@media\s+source\(/,'Tailwind source configuration must not wrap the reset in an invalid media query');
+  assert.match(css,/@layer\s+base\s*\{/,'Tailwind Preflight base rules must be emitted');
+  assert.match(css,/\*,\s*::after,\s*::before,\s*::backdrop,\s*::file-selector-button\s*\{\s*box-sizing:\s*border-box/s,'Tailwind Preflight box sizing reset must be emitted');
+  assert.match(css,/a\s*\{\s*color:\s*inherit/s,'Tailwind Preflight must reset link color');
+  assert.match(css,/button,\s*input,\s*select,\s*optgroup,\s*textarea,\s*::file-selector-button\s*\{\s*font:\s*inherit/s,'Tailwind Preflight must reset form control typography');
+  assert.match(css,/\.eba-access__form input\s*\{[^}]*box-sizing:\s*border-box/s,'Sign-in inputs must use border-box sizing');
+  assert.match(css,/\.eba-access__password button\s*\{[^}]*display:\s*inline-flex/s,'Password visibility control must have scoped EBA button styling');
+  assert.match(css,/\.eba-access__panel a:visited\s*\{\s*color:\s*var\(--eba-ivory\)/s,'Visited sign-in links must retain the EBA color');
 });
 
 function notificationHarness(){

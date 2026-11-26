@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { meetingDate, type Meeting, type MeetingPerson } from "./model";
+import { meetingDate, type CalendarView, type Meeting, type MeetingPerson } from "./model";
 import { meetPresentation } from "./meet-model";
 import { useMeetingClock } from "./use-meeting-clock";
 
@@ -13,11 +13,12 @@ const cardTime=(value:string)=>timeFormat.format(new Date(value));
 function ParticipantAvatar({person}:{person?:MeetingPerson}){
   const [failed,setFailed]=useState(false);
   const initials=person?.display_name.trim().split(/\s+/).slice(0,2).map(word=>word[0]).join("").toUpperCase();
+  const safeProfilePath=person?.avatar_url&&/^\/account\/profile\/photo\/[\da-f-]{36}$/i.test(person.avatar_url);
   return <span className="overview-meeting__avatar" title={person?.display_name??"Meeting participant"}>
-    {person?.avatar_url&&/^https:\/\//.test(person.avatar_url)&&!failed?<Image src={person.avatar_url} alt="" width={25} height={25} unoptimized onError={()=>setFailed(true)}/>:initials||<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>}
+    {person?.avatar_url&&(/^https:\/\//.test(person.avatar_url)||safeProfilePath)&&!failed?<Image src={person.avatar_url} alt="" width={25} height={25} unoptimized onError={()=>setFailed(true)}/>:initials||<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>}
   </span>;
 }
-export function UpcomingMeetings({ initial }: { initial: Data }) {
+export function UpcomingMeetings({ initial, view = "today", maxItems = 2 }: { initial: Data; view?: Extract<CalendarView,"today"|"upcoming">; maxItems?: number }) {
   const now=useMeetingClock();
   const [data, setData] = useState(initial);
   useEffect(() => {
@@ -27,7 +28,7 @@ export function UpcomingMeetings({ initial }: { initial: Data }) {
       if (busy || document.hidden) return;
       busy = true;
       try {
-        const response = await fetch("/dashboard/calendar/api?view=today&people=1", { cache: "no-store", signal: controller.signal });
+        const response = await fetch(`/dashboard/calendar/api?view=${view}&people=1`, { cache: "no-store", signal: controller.signal });
         const result = await response.json();
         if (active && Array.isArray(result.meetings)) setData(result);
       } catch { /* Preserve the latest authorized summary through a short outage. */ }
@@ -38,14 +39,15 @@ export function UpcomingMeetings({ initial }: { initial: Data }) {
     const resume = () => { if (!document.hidden) void refresh(); };
     window.addEventListener("focus", resume); document.addEventListener("visibilitychange", resume);
     return () => { active = false; controller.abort(); clearInterval(timer); window.removeEventListener("focus", resume); document.removeEventListener("visibilitychange", resume); };
-  }, []);
-  return <><p className="overview-meetings__subtitle">Today’s schedule · Lagos time</p>{!data.ready ? <p role="status">{data.error}</p> : !data.meetings.length ? <p className="overview-meetings__empty">No meetings today. Your next plan starts here.</p> : <ul className="overview-meetings" aria-label="Today’s meetings">{data.meetings.map(meeting=>{
+  }, [view]);
+  const shown=data.meetings.slice(0,maxItems);
+  return <><p className="overview-meetings__subtitle">{view==="upcoming"?"Meetings addressed to your account · Lagos time":"Today’s schedule · Lagos time"}</p>{!data.ready ? <p role="status">{data.error}</p> : !data.meetings.length ? <p className="overview-meetings__empty">{view==="upcoming"?"No upcoming meetings are addressed to your account.":"No meetings today. Your next plan starts here."}</p> : <ul className="overview-meetings" aria-label={view==="upcoming"?"Upcoming meetings":"Today’s meetings"}>{shown.map(meeting=>{
     const state=meetPresentation(meeting,now);
     const ids=[...new Set([meeting.organizer_id,...(meeting.attendee_ids??[])].filter(Boolean))];
     const recording=meeting.recording_status==="configured"?"Automatic recording configured":["warning","reconnect_required"].includes(meeting.recording_status??"")?"Recording setup needs attention":"Automatic recording not yet confirmed";
     return <li key={meeting.id} className="overview-meeting">
       <Link className="overview-meeting__details" href={`/dashboard/calendar?meeting=${meeting.id}`} prefetch={false} title={meeting.title}>
-        <strong>{meeting.title}</strong><span>Today, {cardTime(meeting.starts_at)}{meeting.ends_at?` – ${cardTime(meeting.ends_at)}`:""}</span>
+        <strong>{meeting.title}</strong><span>{view==="upcoming"?`${meetingDate(meeting.starts_at)} · `:"Today, "}{cardTime(meeting.starts_at)}{meeting.ends_at?` – ${cardTime(meeting.ends_at)}`:""}</span>
         <span className="overview-meeting__sr">{meetingDate(meeting.starts_at)} · Africa/Lagos</span>
       </Link>
       <div className="overview-meeting__people" aria-label={`${ids.length} participant${ids.length===1?"":"s"}`}>
@@ -60,5 +62,5 @@ export function UpcomingMeetings({ initial }: { initial: Data }) {
         <span className="overview-meeting__sr">{state.url?recording:state.label}</span>
       </div>
     </li>;
-  })}</ul>}{data.truncated&&<p className="overview-meetings__subtitle">First 200 shown. View All to explore your calendar.</p>}</>;
+  })}</ul>}{view==="upcoming"&&data.meetings.length>maxItems&&<p className="overview-meetings__subtitle">Showing the next {maxItems} of {data.meetings.length}. View All for every upcoming meeting.</p>}{data.truncated&&<p className="overview-meetings__subtitle">First 200 shown. View All to explore your calendar.</p>}</>;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Person, ReadConversation } from "./chat-controls";
 import { MessageAttachment } from "./attachments/message-attachment";
 import { MessageActions } from "./message-actions";
@@ -37,6 +38,7 @@ export function ChatHistory({ conversation, latest, members, userId, general, un
   today: string;
   yesterday: string;
 }) {
+  const router = useRouter();
   const [history, setHistory] = useState(() => ({
     latest, messages: latest.messages, hasOlder: latest.hasOlder,
   }));
@@ -72,12 +74,35 @@ export function ChatHistory({ conversation, latest, members, userId, general, un
     }
   }, [conversation]);
 
+  const refreshLatest = useCallback(async () => {
+    const url = "/dashboard/connect/history?" + new URLSearchParams({ chat: conversation });
+    try {
+      const response = await fetch(url, { cache: "no-store" });
+      if (response.status === 401 || response.status === 404 || response.redirected) {
+        router.replace("/dashboard/connect");
+        return;
+      }
+      if (!response.ok) return;
+      const batch: Batch = await response.json();
+      setHistory((current) => ({ ...current, messages: mergeMessages(current.messages, batch.messages), hasOlder: batch.hasOlder }));
+    } catch {
+      // A later realtime event or reconnect refresh can retry the request.
+    }
+  }, [conversation, router]);
+
   useEffect(() => {
     const source = new EventSource("/dashboard/connect/events?chat=" + encodeURIComponent(conversation));
     const update = (event: MessageEvent<string>) => { void refreshMessage(event.data); };
+    const refresh = () => { void refreshLatest(); };
+    const revoke = () => {
+      source.close();
+      router.replace("/dashboard/connect");
+    };
+    source.addEventListener("refresh", refresh);
     source.addEventListener("message-edit", update);
+    source.addEventListener("access-revoked", revoke);
     return () => source.close();
-  }, [conversation, refreshMessage]);
+  }, [conversation, refreshLatest, refreshMessage, router]);
 
   useLayoutEffect(() => {
     const panel = viewport.current;

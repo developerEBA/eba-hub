@@ -5,6 +5,9 @@ import { DashboardIcon } from "../navigation";
 import { DashboardShell } from "../dashboard-shell";
 import { approvalStatuses, approvalTypes, isRequestId, requireApprovalsAccess } from "./review";
 import { ApprovalDetail, formatTimestamp, type RequestDetail, type RequestSummary } from "./approval-detail";
+import { requireHodDashboardAccess } from "../access";
+import { HodRequestForm } from "./hod-request-form";
+import { departmentNames } from "../connect/model";
 
 const route = "/dashboard/approvals";
 const listSize = 25;
@@ -20,6 +23,26 @@ export default function Approvals({ searchParams }: { searchParams: Promise<Quer
 }
 
 async function ProtectedApprovals({ searchParams }: { searchParams: Promise<Query> }) {
+  const workspace=await requireHodDashboardAccess();
+  if(workspace.role==="HOD"){
+    const params=await searchParams,selected=typeof params.request==="string"&&isRequestId(params.request)?params.request:null;
+    const [own,detail,departmentQueue]=await Promise.all([
+      workspace.client.from("approval_requests").select("id,title,request_type,department,requester_name,submitted_at,status")
+        .eq("requester_id",workspace.user.id).in("department",workspace.departments).order("submitted_at",{ascending:false}).limit(50).overrideTypes<RequestSummary[],{merge:false}>(),
+      selected?workspace.client.from("approval_requests").select("id,title,request_type,department,requester_name,submitted_at,status,message,external_url,start_date,end_date,attachment_names,reviewer_email,decided_at,decision_note,department_plans(title,department,period_kind,period_start)")
+        .eq("id",selected).eq("requester_id",workspace.user.id).in("department",workspace.departments).maybeSingle<RequestDetail>():Promise.resolve({data:null,error:null}),
+      workspace.client.rpc("hod_department_approval_summary"),
+    ]);
+    const queue=departmentQueue.data as {pending_count:number;items:{request_type:string;department:string;submitted_at:string;status:string}[]}|null;
+    return <DashboardShell role="HOD" section="approvals"><section className="eba-approvals" aria-labelledby="approvals-title" data-selected={Boolean(selected)}>
+      <header className="eba-approvals__heading"><h1 id="approvals-title">Department approvals</h1><p>Pending summaries are limited to your assigned departments. Request details and private files remain available only to their requester; CEO/Admin make review decisions.</p></header>
+      <div className="eba-approvals__grid"><section className="eba-approvals__list" aria-labelledby="department-queue-heading"><header className="eba-approvals__queue-heading"><h2 id="department-queue-heading">Assigned department queue</h2></header>
+        {departmentQueue.error?<p role="alert">Department approvals could not be loaded. Check that the overview update migration is applied.</p>:!queue?<p role="status">Department approvals are unavailable.</p>:!queue.items.length?<p>No pending approvals in your assigned departments.</p>:<ul>{queue.items.map((item,index)=><li key={`${item.department}:${item.request_type}:${item.submitted_at}:${index}`}><div><strong>{approvalTypes[item.request_type as keyof typeof approvalTypes]??"Request"}</strong><span>{item.department} · Pending CEO/Admin review</span><span>{formatTimestamp(item.submitted_at)}</span></div></li>)}</ul>}
+      </section><section className="eba-approvals__list" aria-labelledby="own-requests-heading"><header className="eba-approvals__queue-heading"><h2 id="own-requests-heading">My requests</h2></header>
+        {own.error?<p role="alert">Your requests could not be loaded.</p>:!own.data?.length?<p>You have not submitted a request yet.</p>:<ul>{own.data.map((item)=><li key={item.id}><Link href={{pathname:"/dashboard/approvals",query:{request:item.id}}} aria-current={item.id===selected?"true":undefined} prefetch={false}><strong>{item.title}</strong><span>{approvalTypes[item.request_type as keyof typeof approvalTypes]} · {item.department}</span><span>{item.status.replaceAll("_"," ")} · {formatTimestamp(item.submitted_at)}</span></Link></li>)}</ul>}
+      </section><article className="eba-approvals__detail" aria-label="Your request details"><h2>{selected?"Request details":"New request"}</h2>{selected?detail.error?<p role="alert">Request details are unavailable.</p>:detail.data?<ApprovalDetail request={detail.data} canDecide={false}/>:<p>This request is unavailable or outside your current department assignments.</p>:<HodRequestForm departments={workspace.departments.map((id)=>({id,label:departmentNames[id]??id}))}/>}</article></div>
+    </section></DashboardShell>;
+  }
   const { client, role } = await requireApprovalsAccess();
   const params = await searchParams;
   const tab = tabs.find(([key]) => key === params.tab)?.[0] ?? "pending";

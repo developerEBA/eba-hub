@@ -13,6 +13,28 @@ export function getAwardDecision(ceoReview: Review | undefined, adminReview: Rev
   return { status: "ready_to_publish", nomineeId: ceoReview.nomineeId };
 }
 
+export function getPeriodRecognitionStatus(input: {
+  periodClosed: boolean;
+  nominationsCount: number;
+  reviews: Array<{ reviewer_role: "ceo" | "admin" }>;
+  result: { outcome: "winner" | "no_award" } | null;
+  decision: AwardDecision;
+}) {
+  if (input.result?.outcome === "winner") return "Winner announced";
+  if (input.result?.outcome === "no_award") return "No award";
+  if (!input.periodClosed) return "Period in progress";
+  if (input.reviews.length === 1) {
+    return input.reviews[0].reviewer_role === "ceo" ? "Awaiting Admin review" : "Awaiting CEO review";
+  }
+  if (input.reviews.length >= 2) {
+    if (input.decision.status === "needs_agreement") return "Reviewers disagree";
+    if (input.decision.status === "no_award") return "No award agreed · awaiting publication";
+    if (input.decision.status === "ready_to_publish") return "Agreed · awaiting publication";
+  }
+  if (input.nominationsCount === 0) return "No nominations yet";
+  return "Awaiting CEO and Admin reviews";
+}
+
 export const decisionLabels = {
   awaiting_reviews: "Awaiting reviews",
   needs_agreement: "Reviewers haven’t agreed",
@@ -43,4 +65,5 @@ export type RecognitionNomination = {
   who_benefited: string;
   what_changed: string;
   evidence_url: string | null;
+  evidence_date?: string | null;
 };

@@ -23,7 +23,7 @@ This implementation does not independently verify those live account conditions.
 
 ## Install and deploy
 
-No dependencies were installed and no hosted migrations were applied by the agent.
+No dependencies were installed and no hosted migrations were applied.
 The workspace already contains `google-auth-library` 10.5.x in package.json and
 node_modules. No new application dependency is needed for Part 2. If restoring
 an earlier installation, install the existing manifest with your normal workflow;
@@ -333,8 +333,8 @@ missing-secret errors and production refusal.
 
 ### Local automatic create/update/cancel acceptance test
 
-This is a **user-triggered live test**, supplied for you to run; it was not run by
-the implementation agent. It can create real Google events and send invitations.
+This is a **user-triggered live test**, supplied for you to run; it has not been run.
+It can create real Google events and send invitations.
 Use a controlled development/staging database with the migrations applied,
 Google connected and known active CEO/Admin test accounts. Review other queued
 meetings before starting: the local worker processes the shared queue.
@@ -395,46 +395,21 @@ worker recovering after five minutes. These hosted checks were not run here.
 
 ### Explicit development test against Google
 
-The agent did not run the live script or create Google events. This script is an
-**operator-triggered test action** that sends real invitations and configures
-recording. It does not join a meeting or start/stop/download a recording.
+No live Google events were created during implementation. The following is a
+manual staging acceptance action that can send invitations and configure
+recording; it does not join a meeting or start/stop/download a recording. Use
+the three existing `-test@enibrand.com` accounts. Keep credentials in a local
+secret store and do not enable the worker unless staging jobs are intended.
 
-Install optional browser tooling yourself if needed (none was installed here):
-
-```powershell
-npm install --save-dev @playwright/test
-npx playwright install chromium
-```
-
-Use the three named `-test@enibrand.com` accounts and local EBA_TEST_* credentials
-described in Part 1. Keep passwords and the server key out of chat and logs. With
-the migrated app running and Google connected, set **locally**:
-
-```powershell
-$env:EBA_TEST_ALLOW_GOOGLE_EVENTS = "yes"
-npm run test:calendar:google:live
-```
-
-This explicit opt-in is also required for the old `test:calendar:live`, because
-saved meetings can now be processed by a configured worker. The Google variant
-checks actual returned Meet links, confirmed recording configuration, stable
-event/conference identities on repeated preparation and rescheduling, weekly
-single/remaining edits, CEO creation and denied cross-owner retry. It still checks
-shared visibility, outsider denial, Overview and cancellation through the app.
-Treat Google-policy failures as failures to investigate, not mocked passes.
-
-Cleanup runs in `finally`, scoped to a printed unique **DEV Calendar** prefix and
-the authenticated test organizer (Admin or CEO). It first cancels locally, asks the
-server to finish Google cancellation, and deletes only series whose occurrences
-are all cancelled and synced. On revoke/outage/timeout it retains rows and jobs
-and reports incomplete cleanup. **Do not manually delete them first**: restore
-Google authorization, reopen each affected cancellation via Calendar's meeting
-deep link, retry, and confirm cancellation in Google Calendar. Remove only that
-run's fully cancelled local test series afterward. If Google reports a foreign
-event, inspect it as the actual Google organizer rather than bypassing identity
-checks. The shared Meet space is not ended/deleted by cancellation, and an already
-distributed Meet URL is not guaranteed to stop working; event cancellation is
-not a live-call termination feature.
+During a specifically approved staging run, use the Calendar UI to verify the
+actual Meet link, confirmed recording configuration, stable event identity on
+retry/reschedule, weekly single/remaining edits, CEO organizer controls and
+denied cross-owner retry. Also verify outsider privacy, Overview consistency and
+cancellation in EBA and Google Calendar. If authorization is revoked or Google
+is unavailable, preserve queued local records and restore the connection before
+retrying cancellation. Do not bypass organizer checks. Event cancellation does
+not end an active call or guarantee that a previously shared Meet URL stops
+working.
 
 ### Exact manual CEO/Admin acceptance flow
 
@@ -487,9 +462,9 @@ existing connection, a build, a mocked test or an unexecuted SQL script.
 | Part 2 sync tests | 24 passed with mocked Google/database responses, including actual worker 401 retry and real retry/cron handlers |
 | Local development worker tests | 6 passed using a fake HTTP transport/clock and temporary fixture .env.local files; no live jobs processed |
 | Lint / TypeScript | Passed |
-| Production build | `npm run build` passed with the existing installed dependency; no dependency installation by the agent |
+| Production build | `npm run build` passed with the existing installed dependency |
 | UI fixture QA | Actual Calendar, meeting dialog and Overview components at 1280×900 and 390×844; pending hides Join, recording failure keeps Join, owner retry confirms configured, invitee has zero retry controls, Overview shows the same status, no horizontal overflow or browser console errors |
-| Browser path | Browser plugin not available; existing Playwright MCP used on an isolated about:blank fixture. This is not a signed-in hosted acceptance run. |
+| UI fixture path | Isolated component fixture; not a signed-in hosted acceptance run. |
 | UI review | 21st metadata consulted and existing native controls reused; no component installed. Review found only the existing meeting-dialog autofocus warning, retained as deliberate initial focus within a native modal. |
 | Hosted SQL / live Google | Supplied, not executed. No live event was created and no recording was started. |
 

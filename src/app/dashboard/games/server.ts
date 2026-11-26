@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
-import { createStaffClient, getStaffRole } from "../../../lib/staff-auth";
+import { createStaffClient, getHodDashboardAccess, getStaffRole } from "../../../lib/staff-auth";
 import type { GameNight, GameRoom, MatchState, Player, RoomView } from "./catalog";
 import { chessAvailable, chessCheck, chessLegal } from "./chess-server";
 import { triviaQuestions } from "./trivia-bank";
@@ -16,13 +16,15 @@ export async function gamesAuth() {
   const { data, error } = await client.auth.getUser();
   if (error || !data.user) return null;
   const role = await getStaffRole(client, data.user);
-  return role ? { client, user: data.user, role } : null;
+  if (role) return { client, user: data.user, role, departments: [] as string[] };
+  const hod = await getHodDashboardAccess(client, data.user);
+  return hod ? { client, user: data.user, role: hod.role, departments: hod.departments } : null;
 }
-export async function loadLounge(client: NonNullable<Awaited<ReturnType<typeof createStaffClient>>>) {
+export async function loadLounge(client: NonNullable<Awaited<ReturnType<typeof createStaffClient>>>,role?:"CEO"|"Admin"|"HOD",departments:string[] = []) {
   const [rooms, sessions, members, invites] = await Promise.all([
     client.from("game_rooms").select("*").order("created_at", { ascending: false }).limit(60),
     client.from("game_nights").select("*").eq("status", "scheduled").gte("starts_at", new Date(Date.now() - 12 * 3600000).toISOString()).order("starts_at").limit(20),
-    loadGameMembers(),
+    loadGameMembers(role,departments),
     client.from("game_invites").select("room_id,game_rooms!inner(*)").eq("game_rooms.status", "waiting").limit(50),
   ]);
   const invitations = (invites.data ?? []).flatMap((invite) => invite.game_rooms ? Array.isArray(invite.game_rooms) ? invite.game_rooms : [invite.game_rooms] : []) as GameRoom[];
@@ -34,14 +36,17 @@ export async function loadLounge(client: NonNullable<Awaited<ReturnType<typeof c
 }
 
 // Call only after the staff gate. Room entry needs invitees, not the entire lobby.
-export async function loadGameMembers() {
+export async function loadGameMembers(role?:"CEO"|"Admin"|"HOD",departments:string[] = []) {
   const admin = gamesAdmin();
   let members: { user_id: string; display_name: string }[] = [];
   if (admin) {
-    const { data: memberships } = await admin.from("staff_memberships").select("user_id,role").eq("status", "active").in("role", ["ceo", "admin"]).limit(100);
+    const { data: memberships } = await admin.from("staff_memberships").select("user_id,role").eq("status", "active").in("role", role === "HOD" ? ["ceo","admin","hod"] : ["ceo", "admin"]).limit(500);
     if (memberships?.length) {
-      const { data: profiles } = await admin.from("connect_profiles").select("user_id,display_name").in("user_id", memberships.map((member) => member.user_id));
-      members = memberships.map((member) => ({ user_id: member.user_id, display_name: profiles?.find((profile) => profile.user_id === member.user_id)?.display_name ?? `${member.role.toUpperCase()} · ${member.user_id.slice(0, 6)}` }));
+      const { data: assignments } = await admin.from("staff_department_assignments").select("user_id,department").in("user_id", memberships.map((member) => member.user_id));
+      const eligible = role === "HOD" ? memberships.filter((member) => (assignments??[]).some((assignment) => assignment.user_id===member.user_id&&departments.includes(assignment.department))) : memberships;
+      const ids=eligible.map((member)=>member.user_id);
+      const { data: profiles } = ids.length?await admin.from("connect_profiles").select("user_id,display_name").in("user_id",ids):{data:[]};
+      members = eligible.map((member) => ({ user_id: member.user_id, display_name: profiles?.find((profile) => profile.user_id === member.user_id)?.display_name ?? `${member.role.toUpperCase()} · ${member.user_id.slice(0, 6)}` }));
     }
   }
   return members;

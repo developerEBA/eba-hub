@@ -63,7 +63,7 @@ test('Isolated HTTP contract: executive reads, organizer writes and denied staff
     }}),
   };
   const original=Module._load;let route,detail;
-  try{Module._load=function(name,...args){if(name==='../server'||name==='../../server')return stub;return original.call(this,name,...args)};route=require(base+'/api/route.ts');detail=require(base+'/api/[id]/route.ts');}finally{Module._load=original;}
+  try{Module._load=function(name,...args){if(name.endsWith('calendar-google/end-permission'))return {endPermission:async()=>actor===admin?'eligible':'not_manager'};if(name==='../server'||name==='../../server')return stub;return original.call(this,name,...args)};route=require(base+'/api/route.ts');detail=require(base+'/api/[id]/route.ts');}finally{Module._load=original;}
   const request=(body,origin='http://localhost:3000')=>new Request('http://localhost:3000/dashboard/calendar/api',{method:'POST',headers:{origin,'Content-Type':'application/json'},body:JSON.stringify({requestId:crypto.randomUUID(),scope:'one',...body})});
   const future={...input,attendees:[otherAdmin],start:'2030-11-18T10:00',end:'2030-11-18T11:00'};
   const created=await route.POST(request({command:'create',...future}));assert.equal(created.status,200);const {id}=await created.json();

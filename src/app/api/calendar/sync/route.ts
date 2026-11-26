@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   if (!authorized(request)) return Response.json({ error: "Forbidden" }, { status: 403,headers: privateHeaders });
   try {
     const callEnding=await runCallEnding();
-    let imported={available:false,imported:0};
+    let imported={available:false,imported:0,unsupported_external:0,invitations_pending:0};
     const {syncFailed,...result}=await runCalendarCycle(async()=>{
       imported=await runGoogleImport();
       return await runCalendarSync(undefined,45_000);

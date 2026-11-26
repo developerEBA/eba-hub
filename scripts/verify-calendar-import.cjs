@@ -10,8 +10,9 @@ test('Owned timed meeting normalizes title, instant, exact Meet URL and nondecli
  // SQL maps these addresses to existing verified active staff; no profiles created.
 });
 test('Native EBA events never loop back into imported records',()=>{assert.equal(incomingEvent({...event(),extendedProperties:{private:{ebaOccurrence:'fixture'}}},email),null)});
-test('Foreign owner, incomplete attendee list, all-day and invalid durations fail closed',()=>{
- for(const change of [{organizer:{email:'other@example.com'}},{attendeesOmitted:true},{start:{date:'2030-11-20'}},{end:{dateTime:'2030-11-22T13:00:00+01:00'}},{start:{dateTime:'invalid'}}])assert.deepEqual(incomingEvent({...event(),...change},email),{id:'google-fixture',cancelled:true});
+test('External organizer events are ignored; incomplete owned events fail closed',()=>{
+ assert.equal(incomingEvent({...event(),organizer:{email:'other@example.com'}},email),null);
+ for(const change of [{attendeesOmitted:true},{start:{date:'2030-11-20'}},{end:{dateTime:'2030-11-22T13:00:00+01:00'}},{start:{dateTime:'invalid'}}])assert.deepEqual(incomingEvent({...event(),...change},email),{id:'google-fixture',cancelled:true});
 });
 test('Cancellations can have minimal fields; unsafe links never produce Join',()=>{
  assert.deepEqual(incomingEvent({id:'deleted',status:'cancelled'},email),{id:'deleted',cancelled:true});
@@ -26,14 +27,18 @@ test('Real importer awaits atomic finish and rechecks known deleted events outsi
  const old=process.env.GOOGLE_ORGANIZER_EMAIL,oldOwner=process.env.GOOGLE_IMPORT_OWNER_EMAIL;process.env.GOOGLE_ORGANIZER_EMAIL=email;process.env.GOOGLE_IMPORT_OWNER_EMAIL='fixture-admin@enibrand.com';
  const calls=[];let fail=false;
  class Provider{async listEvents(){return {items:[event()],nextPageToken:'next'}}async getEvent(){return null}}
- const worker=load('src/lib/calendar-google/import.ts',{'server-only':{},'../../app/dashboard/calendar/server':{calendarAdmin:()=>({rpc:(_name,args)=>({abortSignal:async()=>{calls.push(args);if(args.p_action==='claim')return {data:{lease:'fixture',from:'from',to:'to',check:'deleted'},error:null};if(args.p_action==='finish'&&fail)return {error:{code:'fixture'}};return {data:{imported:1},error:null}}})})},'../google-organizer/server':{organizerAccess:async()=>({accessToken:'fixture'})},'./provider':{CalendarGoogleProvider:Provider}});
- try{assert.deepEqual(await worker.runGoogleImport(),{available:true,imported:1});assert.deepEqual(calls.map(c=>c.p_action),['claim','finish']);assert(calls.every(c=>c.p_data.owner_email==='fixture-admin@enibrand.com'));assert(calls[1].p_data.events.some(e=>e.id==='deleted'&&e.cancelled));calls.length=0;fail=true;assert.equal((await worker.runGoogleImport()).available,false);assert.deepEqual(calls.map(c=>c.p_action),['claim','finish','reset'])}finally{if(old===undefined)delete process.env.GOOGLE_ORGANIZER_EMAIL;else process.env.GOOGLE_ORGANIZER_EMAIL=old;if(oldOwner===undefined)delete process.env.GOOGLE_IMPORT_OWNER_EMAIL;else process.env.GOOGLE_IMPORT_OWNER_EMAIL=oldOwner}
+ const worker=load('src/lib/calendar-google/import.ts',{'server-only':{},'../../app/dashboard/calendar/server':{calendarAdmin:()=>({rpc:(name,args)=>{
+  if(name==='calendar_required_participant_emails')return Promise.resolve({data:[],error:null});
+  if(name==='calendar_google_invitation_deltas')return Promise.resolve({data:{},error:null});
+  return {abortSignal:async()=>{calls.push(args);if(args.p_action==='claim')return {data:{lease:'fixture',from:'from',to:'to',check:'deleted'},error:null};if(args.p_action==='finish'&&fail)return {error:{code:'fixture'}};return {data:{imported:1},error:null}}};
+ }})},'../google-organizer/server':{organizerAccess:async()=>({accessToken:'fixture'})},'./provider':{CalendarGoogleProvider:Provider}});
+ try{assert.deepEqual(await worker.runGoogleImport(),{available:true,imported:1,unsupported_external:0,invitations_pending:0});assert.deepEqual(calls.map(c=>c.p_action),['claim','finish']);assert(calls.every(c=>c.p_data.owner_email==='fixture-admin@enibrand.com'));assert(calls[1].p_data.events.some(e=>e.id==='deleted'&&e.cancelled));calls.length=0;fail=true;assert.equal((await worker.runGoogleImport()).available,false);assert.deepEqual(calls.map(c=>c.p_action),['claim','finish','reset'])}finally{if(old===undefined)delete process.env.GOOGLE_ORGANIZER_EMAIL;else process.env.GOOGLE_ORGANIZER_EMAIL=old;if(oldOwner===undefined)delete process.env.GOOGLE_IMPORT_OWNER_EMAIL;else process.env.GOOGLE_IMPORT_OWNER_EMAIL=oldOwner}
 });
 test('Actual detail dialog keeps imported organizer read-only and suppresses retry',()=>{
  const React=require('react'),{renderToStaticMarkup}=require('react-dom/server');require.extensions['.css']=()=>{};
  const {MeetingDialog}=load('src/app/dashboard/calendar/meeting-dialog.tsx',{'./meet-status':{MeetStatus:({organizer})=>React.createElement('span',null,organizer?'Retry visible':'No retry')}});
  const meeting={id:'fixture',source:'google',organizer_id:'admin',title:'Imported meeting',starts_at:'2030-11-20T11:00:00Z',ends_at:'2030-11-20T12:00:00Z',frequency:'once',status:'scheduled',attendee_ids:[]};
- const html=renderToStaticMarkup(React.createElement(MeetingDialog,{meeting,userId:'admin',directory:{people:[],departments:[],ready:true},onClose(){},onSaved(){}}));
+ const html=renderToStaticMarkup(React.createElement(MeetingDialog,{meeting,userId:'admin',directory:{people:[],requiredParticipants:[],departments:[],ready:true},onClose(){},onSaved(){}}));
  assert.match(html,/Imported from Google Calendar/);assert(!html.includes('Edit meeting'));assert(!html.includes('Cancel meeting'));assert.match(html,/No retry/);
 });
 test('SQL contract isolates source, validates active accounts, leases and no outbound jobs',()=>{
@@ -62,8 +67,11 @@ test('Verified owner forward migration requires explicit Admin and successful cu
 test('Strict default import mode sends no inferred owner mapping',async()=>{
  const oldOwner=process.env.GOOGLE_IMPORT_OWNER_EMAIL,oldGoogle=process.env.GOOGLE_ORGANIZER_EMAIL;
  delete process.env.GOOGLE_IMPORT_OWNER_EMAIL;process.env.GOOGLE_ORGANIZER_EMAIL=email;
- const worker=load('src/lib/calendar-google/import.ts',{'server-only':{},'../google-organizer/server':{organizerAccess:async()=>{throw Error('Unexpected Google call')}},'../../app/dashboard/calendar/server':{calendarAdmin:()=>({rpc:(_name,args)=>({abortSignal:async()=>{assert(!Object.hasOwn(args.p_data,'owner_email'));return {data:null,error:null}}})})}});
- try{assert.deepEqual(await worker.runGoogleImport(),{available:true,imported:0})}finally{
+ const worker=load('src/lib/calendar-google/import.ts',{'server-only':{},'../google-organizer/server':{organizerAccess:async()=>{throw Error('Unexpected Google call')}},'../../app/dashboard/calendar/server':{calendarAdmin:()=>({rpc:(name,args)=>{
+  if(name==='calendar_required_participant_emails')return Promise.resolve({data:[],error:null});
+  return {abortSignal:async()=>{assert(!Object.hasOwn(args.p_data,'owner_email'));return {data:null,error:null}}};
+ }})}});
+ try{assert.deepEqual(await worker.runGoogleImport(),{available:true,imported:0,unsupported_external:0,invitations_pending:0})}finally{
  if(oldOwner===undefined)delete process.env.GOOGLE_IMPORT_OWNER_EMAIL;else process.env.GOOGLE_IMPORT_OWNER_EMAIL=oldOwner;
  if(oldGoogle===undefined)delete process.env.GOOGLE_ORGANIZER_EMAIL;else process.env.GOOGLE_ORGANIZER_EMAIL=oldGoogle;
  }

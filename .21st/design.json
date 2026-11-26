@@ -118,6 +118,17 @@
         "forest": "#063C2D",
         "yellow": "#FDE342"
       }
+    },
+    {
+      "scope": "Overview recognition, Friday Game Night, and profile settings",
+      "direction": "Use the selected dashboard reference's uncluttered ivory cards, forest-green emphasis, yellow details, clear award periods, and compact Friday Game Night actions. Show only persisted published recognition results and scheduled game data. Offer self-service name, verified company email, and private profile-photo updates without enabling Employee/HOD dashboards.",
+      "source": "User-provided streamlined EBA Hub dashboard reference and follow-up request",
+      "tokens": {
+        "forest": "#063C2D",
+        "yellow": "#FDE342",
+        "surface": "#FFFFFF",
+        "cream": "#F7F6F1"
+      }
     }
   ],
   "evidence": [

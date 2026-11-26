@@ -66,13 +66,13 @@ test('Real protected Join handler denies outsider, inactive session, cancelled a
 test('Real bell preserves legacy alerts, protected links, mark read and cancelled suppression',async()=>{
  const React=require('react'),{renderToStaticMarkup}=require('react-dom/server');
  let rows=[{id:1,approval_id:'approval',created_at:new Date(start).toISOString(),read_at:null},{id:2,conversation_id:'private',created_at:new Date(start).toISOString(),read_at:null}];
- const query={select(){return this},order(){return this},limit(){return this},overrideTypes:async()=>({data:rows,error:null}),is:async()=>({count:2,error:null})};
+ const query={select(){return this},order(){return this},limit(){return this},in(){return this},overrideTypes:async()=>({data:rows,error:null}),is:async()=>({count:2,error:null})};
  const {NotificationBell}=load('src/app/dashboard/notifications/bell.tsx',{'./use-meeting-clock':{useMeetingClock:()=>start},'next/link':{default:({href,children})=>React.createElement('a',{href:typeof href==='string'?href:href.pathname},children)},'../../../lib/staff-auth':{createStaffClient:async()=>({from:()=>query})},'../navigation':{DashboardIcon:()=>null},'./controls':{MarkRead:({label})=>React.createElement('button',null,label),NotificationUpdates:()=>null}});
- let html=renderToStaticMarkup(await NotificationBell());assert.match(html,/New approval request/);assert.match(html,/New direct message/);assert.match(html,/Mark all as read/);
+ let html=renderToStaticMarkup(await NotificationBell({role:'Admin'}));assert.match(html,/New approval request/);assert.match(html,/New direct message/);assert.match(html,/Mark all as read/);
  rows=[{id:3,calendar_occurrence_id:id,calendar_lead_minutes:10,read_at:null,calendar_occurrences:{id,title:'Private fixture',starts_at:new Date(start).toISOString(),ends_at:new Date(start+3600000).toISOString(),status:'scheduled',join_url:'https://meet.google.com/abc-defg-hij'}}];
- html=renderToStaticMarkup(await NotificationBell());assert.match(html,/Private fixture/);assert.match(html,/Lagos/);assert.match(html,/Join Meeting/);assert.match(html,new RegExp(`/api/${id}/join`));assert(!html.includes('href="https://meet.google.com'));
- rows[0].calendar_occurrences.status='cancelled';html=renderToStaticMarkup(await NotificationBell());assert.match(html,/Meeting cancelled/);assert(!html.includes('Join Meeting'));
- rows[0].calendar_occurrences=null;html=renderToStaticMarkup(await NotificationBell());assert(!html.includes('Private fixture'));
+ html=renderToStaticMarkup(await NotificationBell({role:'Admin'}));assert.match(html,/Private fixture/);assert.match(html,/Lagos/);assert.match(html,/Join Meeting/);assert.match(html,new RegExp(`/api/${id}/join`));assert(!html.includes('href="https://meet.google.com'));
+ rows[0].calendar_occurrences.status='cancelled';html=renderToStaticMarkup(await NotificationBell({role:'Admin'}));assert.match(html,/Meeting cancelled/);assert(!html.includes('Join Meeting'));
+ rows[0].calendar_occurrences=null;html=renderToStaticMarkup(await NotificationBell({role:'Admin'}));assert(!html.includes('Private fixture'));
 });
 test('Forward SQL contract keeps durable atomic dedup, occurrence locks and private role grants',()=>{
  const sql=fs.readFileSync(path.join(root,'supabase/migrations/20261117010000_calendar_part3_private_reminders.sql'),'utf8');

@@ -16,7 +16,7 @@ The application code is ready for a manually applied migration. No hosted schema
 
 Prerequisites: the existing `staff_memberships` and `connect_profiles` migrations; active `ceo`/`admin` memberships; staff authentication with verified `@enibrand.com` accounts; `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and the server-only `SUPABASE_SECRET_KEY` or `SUPABASE_SERVICE_ROLE_KEY`. Existing application dependencies suffice. No Google credentials are required for Part 1.
 
-The Supabase CLI was not present in the workspace, and no CLI/dependencies were installed, as requested. The timestamped SQL is supplied directly for manual application. Hosted Supabase MCP inspection was unavailable; read-only REST schema inspection confirmed the current staff table has only `user_id`, `role`, and `status`, with no staff department assignment table. Existing department plans and Connect channel labels are not treated as staff assignments.
+The Supabase CLI was not present in the workspace, and no CLI/dependencies were installed. The timestamped SQL is supplied directly for manual application. Hosted schema inspection was unavailable; existing local schema and migration files were used to review the staff table and department assignment model. Existing department plans and Connect channel labels are not treated as staff assignments.
 
 ## Behavior and boundaries
 
@@ -83,34 +83,22 @@ Run **`supabase/checks/calendar_part1_verification.sql`** as postgres in an isol
 
 It checks Admin scheduling CEO, both authenticated RLS views, a third active account's denied detail access, denied invitee writes, server transaction ownership enforcement, single-date rescheduling, stable other dates, cancellation removal, remaining-series updates/cancellation, and reminder invalidation. It creates no auth users, memberships or department assignments.
 
-### Live browser/API/RLS test after migration
+### Manual browser/API/RLS acceptance after migration
 
-Install browser testing tooling yourself if desired (no dependency was added to the project):
-
-```powershell
-npm install --save-dev @playwright/test
-npx playwright install chromium
-```
-
-Configure these **locally**, never in committed files or browser/public environment variables:
-
-```text
-EBA_TEST_BASE_URL=http://localhost:3000
-EBA_TEST_ADMIN_EMAIL=eba-admin-test@enibrand.com
-EBA_TEST_ADMIN_PASSWORD=<local test password>
-EBA_TEST_CEO_EMAIL=eba-ceo-test@enibrand.com
-EBA_TEST_CEO_PASSWORD=<local test password>
-EBA_TEST_UNINVITED_EMAIL=eba-calendar-uninvited-test@enibrand.com
-EBA_TEST_UNINVITED_PASSWORD=<local test password>
-```
-
-With the app running and migration applied, run `npm run test:calendar:live`. The script uses three separate authenticated browser contexts, signs in through the real UI, schedules Admin→CEO, checks both calendars, checks uninvited HTTP 404 and direct RLS denial, rejects attendee mutation, verifies rescheduling and Overview, cancels the occurrence, then checks weekly remaining-series editing/cancellation. It deletes only its uniquely prefixed test series owned by the authenticated test Admin in `finally`. Test credentials must belong to explicitly named `-test@enibrand.com` accounts.
-
-No live browser or database mutation tests can pass against an unapplied schema. Per the requested rollout, those tests are delivered for execution after manual migration; they are not reported as having passed here.
+Use three existing, disposable staging accounts: active Admin, active CEO and
+an uninvited company account. Do not create production accounts or use live
+calendar records. With the staging migration applied, have the Admin create a
+uniquely titled meeting addressed to the CEO. Confirm both see it, the uninvited
+account receives a 404 for the meeting detail and direct database reads deny
+that account. Verify attendee changes are denied, reschedule and cancel the
+meeting, and confirm Overview and Calendar agree. Repeat with a weekly series,
+one-date cancellation and remaining-series update/cancellation. Record only
+PASS/FAIL outcomes; this repository does not include an automated signed-in
+browser runner.
 
 ## Implementation verification record
 
 - Passed: seven local date/recurrence/validation/HTTP-contract tests, including the fallback for local browsers without `crypto.randomUUID`.
 - Passed in isolated React browser fixtures: Admin schedules CEO; invitee sees read-only details; rescheduling is visible in both role views; cancellation removes the entry; outsider details return 404; weekly creation; one-date and remaining-series cancellation; remaining-series editing; empty department choices; 390px mobile layout and modal fit.
 - Passed: full-project lint and TypeScript. Production compilation is verified with `npm run build -- --webpack`; default `npm run build` hit the existing Turbopack CSS worker startup failure, including outside the sandbox. The default configuration was not changed.
-- Not run: the supplied post-migration SQL assertions or real-account Playwright script. They require the manually applied schema and configured test users/passwords. No live RLS/SQL result is inferred from the browser fixtures.
+- Not run: the supplied post-migration SQL assertions or live-account acceptance. They require the manually applied schema and configured test accounts. No live RLS/SQL result is inferred from local checks.

@@ -5,7 +5,7 @@ import { gamesAdmin, gamesAuth, loadLounge, noStore, readPayload } from "../serv
 export async function GET() {
   const auth = await gamesAuth();
   if (!auth) return Response.json({ error: "Sign in with an active Hub account." }, { status: 401, headers: noStore });
-  return Response.json(await loadLounge(auth.client), { headers: noStore });
+  return Response.json(await loadLounge(auth.client,auth.role,auth.departments), { headers: noStore });
 }
 export async function POST(request: Request) {
   const auth = await gamesAuth();

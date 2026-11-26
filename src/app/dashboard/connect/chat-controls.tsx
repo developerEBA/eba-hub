@@ -12,9 +12,10 @@ function Avatar({ profile }: { profile: ConnectProfile | undefined }) {
   const [failed, setFailed] = useState(false);
   const initials = profile?.display_name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join("") || "?";
   const url = profile?.avatar_url;
+  const safeProfilePath = url && /^\/account\/profile\/photo\/[\da-f-]{36}$/i.test(url);
   return (
     <span className="eba-connect__avatar" aria-hidden="true">
-      {url?.startsWith("https://") && !failed ? (
+      {(url?.startsWith("https://") || safeProfilePath) && !failed ? (
         <Image src={url} alt="" width={34} height={34} unoptimized referrerPolicy="no-referrer" onError={() => setFailed(true)} />
       ) : initials.toUpperCase()}
     </span>
@@ -42,7 +43,13 @@ export function Person({ profile, isSelf, avatarOnly }: {
   );
 }
 
-export function Members({ members, userId }: { members: ConnectProfile[]; userId: string }) {
+export function Members({ members, userId, title = "EBA General members", description = "Select a teammate to start a private chat.", allowDirectMessage = true }: {
+  members: ConnectProfile[];
+  userId: string;
+  title?: string;
+  description?: string;
+  allowDirectMessage?: boolean;
+}) {
   const [search, setSearch] = useState("");
   const matches = members.filter((member) => member.display_name.toLowerCase().includes(search.trim().toLowerCase()));
   return (
@@ -52,14 +59,17 @@ export function Members({ members, userId }: { members: ConnectProfile[]; userId
         Members <span className="eba-connect__member-count">{members.length}</span>
       </summary>
       <div className="eba-connect__member-panel">
-        <header><strong>EBA General members</strong><p>Select a teammate to start a private chat.</p></header>
+        <header><strong>{title}</strong><p>{description}</p></header>
         <label className="eba-connect__member-search">
           <span className="sr-only">Search members</span>
           <DashboardIcon path="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 5 5" />
           <input type="search" placeholder="Find a teammate" value={search} onChange={(event) => setSearch(event.target.value)} />
         </label>
         {matches.length ? (
-          <ul>{matches.map((member) => <li key={member.user_id}><Person profile={member} isSelf={member.user_id === userId} /></li>)}</ul>
+          <ul>{matches.map((member) => <li key={member.user_id}>{allowDirectMessage
+            ? <Person profile={member} isSelf={member.user_id === userId} />
+            : <span className="eba-connect__person"><Avatar profile={member} />{member.display_name}{member.user_id === userId && <small className="eba-connect__self">You</small>}</span>}
+          </li>)}</ul>
         ) : <p>No matching members.</p>}
       </div>
     </details>

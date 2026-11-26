@@ -1,8 +1,8 @@
-import { requireDashboardAccess } from "../../access";
+import { requireHodDashboardAccess } from "../../access";
 import { isConversationId } from "../model";
 
 export async function GET(request: Request) {
-  const { client, user } = await requireDashboardAccess();
+  const { client, user } = await requireHodDashboardAccess();
   const room = new URL(request.url).searchParams.get("chat");
   const headers = { "Cache-Control": "private, no-store" };
   if (room !== null) {
@@ -42,7 +42,18 @@ export async function GET(request: Request) {
         channel.on("postgres_changes", { event: "UPDATE", schema: "public", table: "hub_notifications", filter }, refresh);
       }
 
-      const heartbeat = setInterval(() => notify(": heartbeat\n\n"), 15000);
+      const heartbeat = setInterval(() => {
+        if (!room) { notify(": heartbeat\n\n"); return; }
+        void client.from("connect_conversations").select("id").eq("id", room).maybeSingle().then(({ data, error }) => {
+          if (closed) return;
+          if (error || !data) {
+            notify("event: access-revoked\ndata: unavailable\n\n");
+            stop?.();
+            return;
+          }
+          notify(": heartbeat\n\n");
+        });
+      }, 10000);
       const lifetime = setTimeout(() => stop?.(), 50000);
       const onAbort = () => stop?.();
       stop = (closeStream = true) => {

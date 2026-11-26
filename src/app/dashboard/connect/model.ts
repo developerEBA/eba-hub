@@ -19,10 +19,16 @@ export type ConnectMessage = {
   deleted_at: string | null;
 };
 
-export const departmentRooms = [
-  { id: "00000000-0000-4000-8000-000000000002", name: "Graphics" },
-  { id: "00000000-0000-4000-8000-000000000003", name: "Development" },
-  { id: "00000000-0000-4000-8000-000000000004", name: "Communications" },
-  { id: "00000000-0000-4000-8000-000000000005", name: "Events" },
-  { id: "00000000-0000-4000-8000-000000000006", name: "Marketing" },
-] as const;
+export const departmentNames: Record<string, string> = {
+  graphics: "Graphics", development: "Development", communications: "Communications",
+  events: "Events", marketing: "Marketing",
+};
+
+export type ConnectRoom = {
+  id: string;
+  room_type: "general" | "dm" | "department" | "legacy_shared";
+  department: string | null;
+  archived_at: string | null;
+  member_low: string | null;
+  member_high: string | null;
+};

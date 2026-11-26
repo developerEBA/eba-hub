@@ -1,16 +1,16 @@
 "use client";
 import { useEffect } from "react";
 let context: AudioContext | null = null;
-// Brief, clearer two-note chime; independent of the quiet game background music.
+// Prominent four-note alert; device volume and browser policy remain user-controlled.
 export function playNotificationTone(audio:AudioContext) {
-  [659.25,880].forEach((frequency,index)=>{
-    const oscillator=audio.createOscillator(),gain=audio.createGain(),at=audio.currentTime+index*.18;
+  [659.25,880,659.25,1046.5].forEach((frequency,index)=>{
+    const oscillator=audio.createOscillator(),gain=audio.createGain(),at=audio.currentTime+index*.16;
     oscillator.type="triangle";oscillator.frequency.value=frequency;
-    gain.gain.setValueAtTime(0,at);gain.gain.linearRampToValueAtTime(.22,at+.02);
-    gain.gain.exponentialRampToValueAtTime(.0001,at+.38);
+    gain.gain.setValueAtTime(0,at);gain.gain.linearRampToValueAtTime(.48,at+.025);
+    gain.gain.exponentialRampToValueAtTime(.0001,at+.48);
     oscillator.connect(gain);gain.connect(audio.destination);
     oscillator.onended=()=>{oscillator.disconnect();gain.disconnect()};
-    oscillator.start(at);oscillator.stop(at+.4);
+    oscillator.start(at);oscillator.stop(at+.5);
   });
 }
 export function NotificationChime({latestUnreadId}:{latestUnreadId?:number}) {
@@ -27,7 +27,10 @@ export function NotificationChime({latestUnreadId}:{latestUnreadId?:number}) {
       const prior=Number(previous??latestUnreadId);
       if(latestUnreadId>prior || previous===null)sessionStorage.setItem(key,String(latestUnreadId));
       // Initial visit, mark-read, edits and reconnects must not replay old alerts.
-      if(previous!==null&&latestUnreadId>prior&&context?.state==="running")playNotificationTone(context);
+      if(previous!==null&&latestUnreadId>prior){
+        if(context?.state==="running")playNotificationTone(context);
+        if("vibrate" in navigator)navigator.vibrate([220,100,220]);
+      }
     }catch{ /* Sound/storage availability never blocks the private inbox. */ }
   },[latestUnreadId]);
   return null;

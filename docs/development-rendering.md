@@ -8,7 +8,7 @@ development file watching and notification refreshes as well as Calendar.
 Two reload triggers were corrected:
 
 - Tailwind's automatic source detection scanned the project root, including
-  generated `.playwright-mcp` snapshots, documentation and SQL/test artifacts.
+  generated browser snapshots, documentation and SQL/test artifacts.
   Its Turbopack loader registered broad context dependencies. `globals.css` now
   uses `source("../")`, relative to `src/app`, to scan only `src`. The actual
   installed scanner now reports zero input files or watched globs outside `src`.

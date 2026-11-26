@@ -1,97 +1,79 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { requireDashboardAccess } from "../access";
+import { requireHodDashboardAccess } from "../access";
 import { DashboardShell } from "../dashboard-shell";
 import DashboardLoading from "../loading";
-import { decisionLabels, getAwardDecision, reviewCriteria, type RecognitionNomination, type RecognitionReview } from "./award-decision";
-import { PublishWinner, ReviewForm } from "./review-forms";
-import { currentRecognitionWeek, isMonday, loadRecognition, recognitionPath, recognitionWeekLabel, shiftWeek } from "./recognition";
-import { RecognitionWorkspace } from "./recognition-workspace";
+import { recognitionPath } from "./recognition";
+import { PeriodAward } from "./period-award";
+import { isRecognitionPeriod, latestCompletedRecognitionPeriod, nextRecognitionPeriod, recognitionPeriodClosed, recognitionPeriodLabel, recognitionPeriodStart, type RecognitionCadence } from "./periods";
 import "./insights.css";
 
 type Query = Record<string, string | string[] | undefined>;
+type AwardType = "employee_month" | "teamwork_month" | "most_improved_month";
+const awardTypes: AwardType[] = ["employee_month", "teamwork_month", "most_improved_month"];
+type Candidate = { user_id: string; display_name: string };
+type PeriodNomination = { id: string; contributor_ids: string[]; what_they_did: string; collaboration: string; who_benefited: string; what_changed: string; evidence_date: string; evidence_url: string; before_date: string | null; after_date: string | null; before_evidence: string | null; after_evidence: string | null };
+type PeriodReview = { reviewer_id: string; reviewer_role: "ceo" | "admin"; nomination_id: string | null; impact: string; contribution: string; evidence_strength: string; submitted_at: string };
+type PeriodResult = { outcome: "winner" | "no_award"; result_label: string; public_reason: string };
+type QueryResult<T> = { data: T | null; error: unknown };
 
 export default function Insights({ searchParams }: { searchParams: Promise<Query> }) {
   return <Suspense fallback={<DashboardLoading />}><Recognition searchParams={searchParams} /></Suspense>;
 }
 
 async function Recognition({ searchParams }: { searchParams: Promise<Query> }) {
-  const { client, role, user } = await requireDashboardAccess();
+  const { client, role, user } = await requireHodDashboardAccess();
+  if(role==="HOD")redirect("/dashboard");
   const query = await searchParams;
-  const current = currentRecognitionWeek();
-  const week = isMonday(query.week) && query.week <= current ? query.week : current;
-  const [result, nominationResult, reviewResult] = await Promise.all([
-    loadRecognition(client, week),
-    client.from("weekly_recognition_nominations")
-      .select("nominee_id,nominee_name,what_they_did,who_benefited,what_changed,evidence_url")
-      .eq("week_start", week).order("nominee_name").returns<RecognitionNomination[]>(),
-    client.from("weekly_recognition_reviews")
-      .select("reviewer_id,reviewer_role,nominee_id,impact,contribution,evidence_strength,submitted_at")
-      .eq("week_start", week).returns<RecognitionReview[]>(),
-  ]);
-  const nominations = nominationResult.data ?? [];
-  const reviews = reviewResult.data ?? [];
-  const ownReview = reviews.find((review) => review.reviewer_id === user.id);
-  const bothSubmitted = reviews.length === 2;
-  const choice = (reviewRole: "ceo" | "admin") => {
-    const review = reviews.find((entry) => entry.reviewer_role === reviewRole);
-    return review ? { nomineeId: review.nominee_id } : undefined;
-  };
-  const decision = getAwardDecision(choice("ceo"), choice("admin"));
-  const agreedNominee = decision.status === "ready_to_publish"
-    ? nominations.find((nomination) => nomination.nominee_id === decision.nomineeId) : undefined;
-  const unavailable = Boolean(result.error || nominationResult.error || reviewResult.error);
-
-  return (
-    <DashboardShell role={role} section="insights">
-      <section className="eba-recognition" aria-labelledby="recognition-title">
-        <header className="recognition-page-heading"><div><p className="recognition-kicker">Insights</p><h1 id="recognition-title">Employee Recognition</h1><p className="recognition-subtitle">Recognize meaningful contributions across EBA.</p></div>
-          <nav className="recognition-week" aria-label="Recognition weeks">
-            {isMonday(shiftWeek(week, -1)) && <Link aria-label="Previous week" href={{ pathname: recognitionPath, query: { week: shiftWeek(week, -1) } }}>‹</Link>}
-            <div><strong>{recognitionWeekLabel(week)}</strong>{week === current ? <span>This week</span> : <Link href={recognitionPath}>Back to this week</Link>}</div>
-            {week < current ? <Link aria-label="Next week" href={{ pathname: recognitionPath, query: { week: shiftWeek(week, 1) } }}>›</Link> : <span aria-hidden="true" className="recognition-week__disabled">›</span>}
-          </nav>
-        </header>
-        {query.result === "already-published" && result.data && <p role="status">A winner is already published for this week.</p>}
-        {query.result === "publish-blocked" && !result.data && <p role="status">
-          {decision.status === "ready_to_publish" ? "The agreed nominee may no longer be eligible. Review the nomination before trying again."
-            : "The reviews changed. Both reviewers must agree before publishing."}
-        </p>}
-        <article className="recognition-winner">
-          <div className="recognition-winner__label"><span className="recognition-trophy" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3h8v7a4 4 0 0 1-8 0zM8 5H4v2a4 4 0 0 0 4 4m8-6h4v2a4 4 0 0 1-4 4m-4 3v5m-4 2h8m-7-2h6" /></svg></span><div><h2>Most Influential Employee of the Week</h2><p>{recognitionWeekLabel(week)}</p></div></div>
-          <div className="recognition-winner__result">
-          {result.error ? <p role="status">Recognition could not be loaded.</p> : result.data ? (
-            <><strong className="eba-recognition__winner">{result.data.winner_name}</strong><p>{result.data.reason}</p></>
-          ) : <p>No winner announced for this week.</p>}</div>
-        </article>
-        {unavailable ? <p role="status">Nominations or reviews could not be loaded.</p> : (
-          <>
-            <RecognitionWorkspace key={week} nominations={nominations}>
-              <header className="recognition-review__heading"><div><h2 id="recognition-reviews">Independent review</h2><p>Signed in as {role}</p></div><span role="status">{result.data ? "Published" : decisionLabels[decision.status]}</span></header>
-              {!bothSubmitted && !result.data && <p>Each review stays private until both reviewers have submitted.</p>}
-              {reviews.map((review) => (
-                <details key={review.reviewer_role} className="recognition-submitted">
-                  <summary>{review.reviewer_role === "ceo" ? "CEO" : "Admin"} review · Submitted</summary>
-                  <h3>{review.reviewer_role === "ceo" ? "CEO" : "Admin"} review{review.reviewer_id === user.id ? " (you)" : ""}</h3>
-                  <p>{review.nominee_id
-                    ? nominations.find((nomination) => nomination.nominee_id === review.nominee_id)?.nominee_name ?? "Nominee unavailable"
-                    : "No award this week"}</p>
-                  <dl>{reviewCriteria.map(([key, label]) => (
-                    <div key={key}><dt>{label}</dt><dd>{review[key]}</dd></div>
-                  ))}</dl>
-                </details>
-              ))}
-              {!result.data && (!ownReview || bothSubmitted) && (
-                <ReviewForm key={week + (ownReview?.submitted_at ?? "")}
-                  week={week} nominations={nominations} ownReview={ownReview} />
-              )}
-            {!result.data && role === "Admin" && agreedNominee && (
-              <PublishWinner key={week + agreedNominee.nominee_id} week={week} nominee={agreedNominee} />
-            )}
-            </RecognitionWorkspace>
-          </>
-        )}
-      </section>
-    </DashboardShell>
-  );
+  if (query.archive === "recognition") {
+    const [weekly, period, retiredMonthly] = await Promise.all([
+      client.from("weekly_recognition").select("week_start,winner_name,reason,outcome").order("week_start",{ascending:false}).limit(50),
+      client.from("period_recognition_results").select("award_type,period_start,outcome,result_label,public_reason").in("award_type",["employee_year","teamwork_year"]).order("period_start",{ascending:false}).limit(100),
+      client.from("period_recognition_results").select("award_type,period_start,outcome,result_label,public_reason").in("award_type",["employee_month","teamwork_month"]).order("period_start",{ascending:false}).limit(100),
+    ]);
+    return <DashboardShell role={role} section="insights"><section className="eba-recognition"><header className="recognition-page-heading"><div><p className="recognition-kicker">Insights</p><h1>Historical recognition archive</h1><p>Read-only published results from retired weekly and yearly categories. New nominations and reviews are disabled.</p><Link href={recognitionPath}>Back to monthly recognition</Link></div></header><section className="period-recognition"><h2>Published historical results</h2>{weekly.error || period.error || retiredMonthly.error ? <p role="alert">Historical results could not be loaded.</p> : <ul>{[...(weekly.data??[]).map((row)=>({label:"Employee of the Week",period:row.week_start,outcome:row.outcome,name:row.winner_name,reason:row.reason})),...(period.data??[]).map((row)=>({label:row.award_type==="employee_year"?"Employee of the Year":"Best Teamwork · Year",period:row.period_start,outcome:row.outcome,name:row.result_label,reason:row.public_reason})),...(retiredMonthly.data??[]).map((row)=>({label:row.award_type==="employee_month"?"Employee of the Month":"Best Teamwork",period:row.period_start,outcome:row.outcome,name:row.result_label,reason:row.public_reason}))].map((row)=><li key={`${row.label}-${row.period}`}><strong>{row.label} · {row.period}</strong><p>{row.outcome==="no_award"?"No award published":row.name}</p><p>{row.reason}</p></li>)}</ul>}{!weekly.data?.length&&!period.data?.length&&!retiredMonthly.data?.length&&!weekly.error&&!period.error&&!retiredMonthly.error&&<p>No historical published results.</p>}</section></section></DashboardShell>;
+  }
+  const cadence: RecognitionCadence = "month";
+  const current = recognitionPeriodStart(cadence);
+  const latestCompleted = latestCompletedRecognitionPeriod();
+  const period = isRecognitionPeriod(cadence, query.period) && String(query.period) <= current ? query.period : latestCompleted;
+  const types = awardTypes;
+  const candidateQuery = client.rpc("period_recognition_candidates").returns<Candidate[]>();
+  const combined = await Promise.all([candidateQuery, ...types.map((type) => Promise.all([
+    client.from("period_recognition_nominations").select("id,contributor_ids,what_they_did,collaboration,who_benefited,what_changed,evidence_date,evidence_url,before_date,after_date,before_evidence,after_evidence").eq("award_type",type).eq("period_start",period).order("submitted_at").returns<PeriodNomination[]>(),
+    client.from("period_recognition_reviews").select("reviewer_id,reviewer_role,nomination_id,impact,contribution,evidence_strength,submitted_at").eq("award_type",type).eq("period_start",period).returns<PeriodReview[]>(),
+    client.from("period_recognition_results").select("outcome,result_label,public_reason").eq("award_type",type).eq("period_start",period).maybeSingle<PeriodResult>(),
+  ]) )]);
+  const candidatesResult = combined[0] as QueryResult<Candidate[]>;
+  const awards = combined.slice(1) as [QueryResult<PeriodNomination[]>,QueryResult<PeriodReview[]>,QueryResult<PeriodResult>][];
+  const candidates = candidatesResult.data ?? [];
+  const periodClosed = recognitionPeriodClosed(cadence,period);
+  return <DashboardShell role={role} section="insights"><section className="eba-recognition" aria-labelledby="recognition-title">
+    <RecognitionHeader cadence={cadence} period={period} current={current}/>
+    <section className="period-recognition" aria-labelledby="period-recognition-heading"><header><div><p className="recognition-kicker">Recognition</p><h2 id="period-recognition-heading">Monthly evidence awards</h2><p>Each award uses evidence from the selected month, with Africa/Lagos period boundaries.</p></div></header>
+      {!periodClosed && <p className="period-recognition__notice"><strong>Period in progress.</strong> This month is open for viewing; nominations and reviews become available after the month closes.</p>}
+      <div className="period-recognition__grid">{types.map((type,index) => {
+        const [nominations,reviews,result] = awards[index];
+        return <PeriodAward key={type} type={type} period={period} periodClosed={periodClosed} candidates={candidates}
+          nominations={nominations.data ?? []} reviews={reviews.data ?? []} result={result.data ?? null} role={role} userId={user.id}
+          unavailable={Boolean(nominations.error || reviews.error || result.error)} candidateUnavailable={Boolean(candidatesResult.error)}/>;
+      })}</div>
+    </section>
+    <ActivitySection cadence={cadence} period={period}/>
+  </section></DashboardShell>;
 }
+
+function RecognitionHeader({ cadence, period, current }: { cadence: RecognitionCadence; period: string; current: string }) {
+  const mostRecentCompleted = latestCompletedRecognitionPeriod();
+  const previous = nextRecognitionPeriod(cadence,period,-1), next = nextRecognitionPeriod(cadence,period,1);
+  return <header className="recognition-page-heading"><div><p className="recognition-kicker">Insights</p><h1 id="recognition-title">Employee Recognition</h1><p className="recognition-subtitle">Admin and CEO nominate and review. CEO publishes the agreed result.</p>
+    <nav className="period-recognition__tabs" aria-label="Recognition month"><Link href={{pathname:recognitionPath,query:{cadence:"month",period:mostRecentCompleted}}} aria-current={period===mostRecentCompleted?"page":undefined}>Most recent completed</Link><Link href={{pathname:recognitionPath,query:{cadence:"month",period:current}}} aria-current={period===current?"page":undefined}>Current month</Link></nav>
+  </div><nav className="recognition-week" aria-label={`${cadence} navigation`}>
+    <Link aria-label={`Previous ${cadence}`} href={{pathname:recognitionPath,query:{cadence,period:previous}}}>‹</Link>
+    <div><strong>{recognitionPeriodLabel(cadence,period)}</strong>{period===current?<span>Current period</span>:<Link href={{pathname:recognitionPath,query:{cadence,period:current}}}>Back to current</Link>}</div>
+    {next<=current?<Link aria-label={`Next ${cadence}`} href={{pathname:recognitionPath,query:{cadence,period:next}}}>›</Link>:<span aria-hidden="true" className="recognition-week__disabled">›</span>}
+  </nav></header>;
+}
+
+function ActivitySection({ cadence, period }: { cadence: RecognitionCadence; period: string }) { return <section className="period-recognition__activity" aria-labelledby="activity-heading"><p className="recognition-kicker">Activity · {recognitionPeriodLabel(cadence,period)} · Africa/Lagos</p><h2 id="activity-heading">Work activity</h2><p>Activity statistics will be available when work tracking is connected.</p><small>Historical plan items have free-text owners and no verified contributor IDs or completion timestamps. New HOD-authored tasks record verified assignee IDs, assignment times, and HOD-reported completion times, but a status change is not independently verified and this view does not yet calculate metrics. Submitted plans, uploads, approvals, edits and deletions are not completion evidence. Reporting needs an auditable status history and defined treatment of reopened or duplicate completions.</small></section>; }

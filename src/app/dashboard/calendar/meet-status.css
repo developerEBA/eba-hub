@@ -9,3 +9,4 @@
 .cal-meet .cal-visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .cal-meet__refresh{margin:.65rem 0 0 .5rem;padding:.55rem .7rem;border:1px solid #b8cfc1;border-radius:.4rem;background:transparent;color:var(--meet-forest);font:600 .75rem Arial,sans-serif;min-height:40px;cursor:pointer}
 .cal-meet .cal-meet__join:disabled{opacity:.5;cursor:not-allowed;background:#e6eae2;color:#667368;margin-top:.4rem}
+.cal-meet__window{font-size:.73rem;color:#063C2D;margin:.5rem 0}.cal-end-confirm{background:#fffef7;color:#063C2D;border:1px solid #063C2D;border-top:5px solid #FDE342;border-radius:16px;padding:24px;width:min(480px,calc(100vw - 32px));box-shadow:0 24px 80px #063c2d44}.cal-end-confirm::backdrop{background:#063c2dbb}.cal-end-confirm h3{font-size:1.2rem;margin:0 0 12px}.cal-end-confirm button:focus-visible{outline:3px solid #FDE342;outline-offset:3px}

@@ -1,9 +1,9 @@
-import { requireDashboardAccess } from "../../access";
+import { requireHodDashboardAccess } from "../../access";
 import { loadChatHistory, messageFields } from "../history-data";
 import { isConversationId, type ConnectMessage } from "../model";
 
 export async function GET(request: Request) {
-  const { client } = await requireDashboardAccess();
+  const { client } = await requireHodDashboardAccess();
   const params = new URL(request.url).searchParams;
   const room = params.get("chat");
   const cursor = params.get("before") ?? "";

@@ -34,6 +34,7 @@ export function RecognitionWorkspace({ nominations, children }: { nominations: R
         {nominee ? <>
           <header className="recognition-evidence__person"><NomineeInitials name={nominee.nominee_name} /><div><p className="recognition-kicker">Nomination evidence</p><h2>{nominee.nominee_name}</h2></div></header>
           <dl>{([["What they did", nominee.what_they_did], ["Who benefited", nominee.who_benefited], ["What changed", nominee.what_changed]] as const).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+          {nominee.evidence_date && <p>Evidence date · {nominee.evidence_date}</p>}
           {link && <a className="recognition-support" href={link} target="_blank" rel="noopener noreferrer">Open supporting link <span aria-hidden="true">↗</span></a>}
         </> : <div className="recognition-evidence__empty"><span aria-hidden="true">✧</span><h2>Every contribution matters.</h2><p>Nomination evidence will appear here when nominations are available for this week.</p></div>}
       </section>

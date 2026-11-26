@@ -15,7 +15,7 @@ export interface CallEndProvider{
 export async function endClaim(claim:EndClaim,provider:CallEndProvider,email:string,
  control:(action:string,data?:Record<string,unknown>)=>Promise<{valid?:boolean;conflict?:boolean}|null>,now=Date.now()){
  const m=claim.meeting,job=claim.job;
- const finish=async(state:EndState,reason:string)=>{await control("finish",{state,reason});return state};
+ const finish=async(state:EndState,reason:string)=>{const saved=await control("finish",{state,reason});return saved?state:"retry"};
  try{
   if(!validMeetUrl(m.join_url)||m.provider_calendar_id!==email||!m.provider_event_id)return await finish("unavailable","identity_unavailable");
   let current=await control("assert");
@@ -41,10 +41,13 @@ export async function endClaim(claim:EndClaim,provider:CallEndProvider,email:str
   if(!current?.valid)return "retry";
   // Google exposes no compare-and-swap conference parameter for this method.
   // Bind identity and immediately re-read to reduce replacement-conference risk.
-  space=await provider.getSpace(space.name);
+  const canonical=space.name;
+  space=await provider.getSpace(canonical);
+  if(space.name!==canonical)return await finish("retry","provider_readback_incomplete");
   if(space.activeConference?.conferenceRecord!==active)return await finish("ended","observed_conference_no_longer_active");
   await provider.endActiveConference(space.name!);
   const after=await provider.getSpace(space.name!);
+  if(after.name!==canonical)return await finish("retry","provider_readback_incomplete");
   return await finish(after.activeConference?.conferenceRecord===active?"retry":"ended",
     after.activeConference?.conferenceRecord===active?"termination_not_yet_confirmed":"termination_confirmed");
  }catch(error){
@@ -69,10 +72,20 @@ export async function runCallEnding(id?:string){
   const due=await query.abortSignal(AbortSignal.timeout(3000));
   if(due.error)return empty;if(!due.data?.length)return {...empty,available:true};
   const enabled=process.env.GOOGLE_MEET_CALL_ENDING_ENABLED==="true";
-  const access=enabled?await organizerAccess():null;
-  if(Date.now()>deadline-4000)return empty;
   claim=await rpc("claim") as EndClaim|null;
   if(!claim)return {...empty,available:true};
+  const connection=enabled?await db.from("google_organizer_connection").select("enabled,email").eq("singleton",true).abortSignal(AbortSignal.timeout(3000)).single():null;
+  if(enabled&&(!connection?.data?.enabled||connection.data.email!==email)){
+   await rpc("finish",{state:"unavailable",reason:"additional_authorization_required"});
+   return {available:true,processed:1,ended:0};
+  }
+  let access:Awaited<ReturnType<typeof organizerAccess>>|null=null;
+  try{access=enabled?await organizerAccess():null}catch(error){
+   const kind=(error as {kind?:string})?.kind;
+   await rpc("finish",{state:kind==="revoked"||kind==="permissions"?"unavailable":"retry",reason:kind==="revoked"||kind==="permissions"?"additional_authorization_required":"provider_unavailable"});
+   return {available:true,processed:1,ended:0};
+  }
+  if(Date.now()>deadline-4000){await rpc("finish",{state:"retry",reason:"provider_unavailable"});return empty}
   if(!enabled||!access?.callEndingAuthorized){
    await rpc("finish",{state:"unavailable",reason:enabled?"additional_authorization_required":"call_ending_not_enabled"});
    return {available:true,processed:1,ended:0};

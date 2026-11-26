@@ -70,7 +70,7 @@ function counts(data) {
 export async function runLocalCalendarWorker({ secret, signal, fetchImpl = globalThis.fetch, log = console.log, timers = { setTimeout, clearTimeout } }) {
   requireDevelopment();
   validateSecret(secret);
-  log("[calendar-worker] Local worker started. Queued meetings may create real Google events, invitations and private in-app reminders.");
+  log("[calendar-worker] Local worker started. Queued jobs may create real Google events, invitations, private reminders and end eligible active calls.");
   try {
     while (!signal.aborted) {
       const controller = new AbortController();

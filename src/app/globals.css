@@ -1,5 +1,6 @@
 /* Keep generated logs, snapshots and dependency files out of the dev watcher. */
-@import "tailwindcss" source("../");
+@import "tailwindcss";
+@source "../";
 
 :root {
   --background: #ffffff;
@@ -287,6 +288,7 @@ body {
 }
 
 .eba-access__form input {
+  box-sizing: border-box;
   width: 100%;
   min-width: 0;
   min-height: 2.75rem;
@@ -300,6 +302,7 @@ body {
 .eba-access__password {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 3.75rem;
+  min-width: 0;
 }
 
 .eba-access__password input {
@@ -308,13 +311,24 @@ body {
 }
 
 .eba-access__password button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   grid-area: 1 / 2;
   z-index: 1;
   margin: 0.25rem;
+  min-width: 0;
+  min-height: 2rem;
+  padding: 0 0.25rem;
+  border: 0;
   border-radius: 0.375rem;
+  appearance: none;
+  background: transparent;
   color: var(--eba-gold);
+  font: inherit;
   font-size: 0.75rem;
   font-weight: 700;
+  line-height: 1;
   cursor: pointer;
 }
 
@@ -367,8 +381,19 @@ body {
 .eba-access__panel a {
   display: inline-block;
   padding-block: 0.625rem;
+  color: var(--eba-ivory);
   text-decoration: underline;
   text-underline-offset: 0.25em;
+}
+
+.eba-access__panel a:visited {
+  color: var(--eba-ivory);
+}
+
+.eba-access__panel a:focus-visible {
+  color: var(--eba-ivory);
+  outline: 2px solid var(--eba-ivory);
+  outline-offset: 3px;
 }
 
 .eba-access__panel a:hover,

@@ -13,7 +13,7 @@ Reminder recipients remain the organizer and explicit active invitees.
 
 Review `supabase/executive-meetings-preflight.sql` read-only, then apply
 `supabase/migrations/20261117163000_executive_meeting_access.sql` yourself after the
-previous calendar/import migrations. No migration was applied by the agent. The
+previous calendar/import migrations. No migration was applied. The
 app now removes participation filters for authenticated CEO/Admin requests; database
 RLS independently applies the active executive gate. **Until the forward migration
 is applied, the old database policy can still hide meetings.** This preserves column
@@ -110,7 +110,7 @@ outside the app's control. This milestone adds no push/email/SMS notification.
 ## Operator setup and verification
 
 No dependencies, accounts, credentials, hosted migrations or live jobs were changed
-or started by the agent. Before starting worker, run
+or started. Before starting worker, run
 `supabase/meeting-updates-preflight.sql` read-only and confirm Parts 1–3, base import
 and verified import-owner migrations are installed. Then review/apply these forward
 migrations yourself, in order:
@@ -153,10 +153,10 @@ pending until the operator applies migrations and performs these steps.
 Implementation verification: 76 relevant automated checks passed (12 meeting/game
 updates, 11 import, 10 reminders, 24 outbound Google, 8 Calendar, 7 worker and 4
 rendering). Lint, TypeScript and webpack production build passed; sandbox output
-directory EPERM required retrying the build outside the filesystem sandbox. The
-21st review found zero issues across the five updated UI components. Browser plugin
-was unavailable, so existing Playwright MCP checked isolated actual-component SSR
-fixtures at 1280px and 390px: invitation link and audience selector rendered,
+directory EPERM required retrying the build outside the filesystem sandbox. UI review
+found zero issues across the five updated UI components. Browser automation was not
+available, so isolated actual-component SSR fixtures were checked at
+1280px and 390px: invitation link and audience selector rendered,
 selection changed, no horizontal overflow or page errors. This is fixture layout
 evidence, not authenticated RLS, persisted UI interaction or audible-device proof.
 
@@ -197,6 +197,6 @@ recording in Google**, and verify ON becomes confirmed. Toggle automatic recordi
 in Google on a controlled test event and recheck: OFF must be reported honestly.
 A guest merely starting/stopping recording does not prove that the automatic
 setting changed. Uninvited, inactive, cancelled or cross-origin requests must be
-denied. These live cases and hosted SQL execution were not performed by the agent.
+denied. These live cases and hosted SQL execution remain outstanding.
 Automated checks use mocked Google ON/OFF/unknown/failed persistence and verify
 that no Google patch/recording-configuration method is called.

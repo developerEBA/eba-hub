@@ -6,6 +6,7 @@ export async function POST(request: Request,{ params }: { params: Promise<{ id: 
   if (request.headers.get("origin") !== new URL(request.url).origin) return Response.json({ error: "Forbidden" },{ status: 403,headers: calendarHeaders });
   const auth = await calendarAuth();
   if (!auth) return Response.json({ error: "Sign in with an active CEO or Admin account." },{ status: 401,headers: calendarHeaders });
+  if (auth.role === "HOD") return Response.json({ error: "Calendar preparation controls are unavailable in HOD calendar access." },{ status: 403,headers: calendarHeaders });
   const { id } = await params;
   if (!uuidPattern.test(id)) return Response.json({ error: "Meeting unavailable." },{ status: 404,headers: calendarHeaders });
   const found = await findMeeting(auth.client,auth.user.id,id,auth.role);

@@ -11,13 +11,15 @@ import type { loadLounge } from "./server";
 
 type LoungeData = Awaited<ReturnType<typeof loadLounge>>;
 const dateLabel = (value: string) => new Intl.DateTimeFormat("en-NG", {timeZone:"Africa/Lagos",dateStyle:"medium",timeStyle:"short"}).format(new Date(value));
-export function GamesLounge({ initial, role, userId, sessionId: initialSessionId }: { initial: LoungeData; role: "CEO" | "Admin"; userId: string; sessionId?: string }) {
+export function GamesLounge({ initial, role, userId, sessionId: initialSessionId }: { initial: LoungeData; role: "CEO" | "Admin" | "HOD"; userId: string; sessionId?: string }) {
   const params=useSearchParams();
   const room = params.get("room");
   const roomId = room && uuidPattern.test(room) ? room : undefined;
   const playingSudoku = params.get("play") === "sudoku";
   const sessionId = params.get("session") ?? initialSessionId;
-  const [data,setData]=useState(initial), [create,setCreate]=useState<GameId|null>(null), [error,setError]=useState(""), [notice,setNotice]=useState(""), [pending,setPending]=useState(false), [filter,setFilter]=useState("all");
+  const requestedGame=params.get("game");
+  const initialFilter=gameCatalog.some((game)=>game.id===requestedGame&&game.id!=="sudoku")?requestedGame as GameId:"all";
+  const [data,setData]=useState(initial), [create,setCreate]=useState<GameId|null>(null), [error,setError]=useState(""), [notice,setNotice]=useState(""), [pending,setPending]=useState(false), [filter,setFilter]=useState<string>(initialFilter);
   const busy=useRef(false), refreshing=useRef(false);
   const createDialog=useRef<HTMLDialogElement>(null);
   useEffect(()=>{if(create)createDialog.current?.showModal();},[create]);

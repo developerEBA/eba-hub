@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
-import { createStaffClient, getStaffRole } from "../../../lib/staff-auth";
+import { createStaffClient, getHodDashboardAccess, getStaffRole } from "../../../lib/staff-auth";
 import { departmentLabels, viewRange, type CalendarView, type Directory, type Meeting, type MeetingPerson, type Person } from "./model";
 
 const legacyMeetingColumns = "id,series_id,organizer_id,ordinal,original_starts_at,title,agenda,starts_at,ends_at,timezone,frequency,recurrence_until,attendee_ids,department_targets,status,version,join_url,sync_status,recording_status,link_error_code";
@@ -20,17 +20,21 @@ export async function calendarAuth() {
   const { data, error } = await client.auth.getUser();
   if (error || !data.user) return null;
   const role = await getStaffRole(client, data.user);
-  return role ? { client, user: data.user, role } : null;
+  if (role) return { client, user: data.user, role, departments: [] as string[] };
+  const hod = await getHodDashboardAccess(client, data.user);
+  return hod ? { client, user: data.user, role: hod.role, departments: hod.departments } : null;
 }
 type StaffClient = NonNullable<Awaited<ReturnType<typeof createStaffClient>>>;
-export async function loadMeetings(client: StaffClient, userId: string, view: CalendarView = "week", limit = 200,role?:"CEO"|"Admin") {
+export async function loadMeetings(client: StaffClient, userId: string, view: CalendarView = "week", limit = 200,role?:"CEO"|"Admin"|"HOD") {
   const range = viewRange(view);
   // Active executives see every meeting. The database independently enforces
   // the same role gate; no service-client bypass is used for calendar reads.
   const queryFor = (columns:string) => {
   let query = client.from("calendar_occurrences").select(columns);
   if(role!=="CEO"&&role!=="Admin")query=query.or(`organizer_id.eq.${userId},attendee_ids.cs.{${userId}}`);
-  query=query.eq("status", "scheduled").gt("ends_at", view==="upcoming"?new Date(Date.parse(range.from)-3*3600000).toISOString():range.from);
+  // Upcoming excludes completed meetings at the current instant while still
+  // including meetings already in progress; this lets the next item move up.
+  query=query.eq("status", "scheduled").gt("ends_at", range.from);
   if (view !== "upcoming") query = query.lt("starts_at", range.to);
   return query.order("starts_at").order("id").limit(limit + 1).overrideTypes<Meeting[],{merge:false}>();
   };
@@ -40,7 +44,7 @@ export async function loadMeetings(client: StaffClient, userId: string, view: Ca
   if (missingSource(result.error)) result = await queryFor(legacyMeetingColumns);
   return { meetings: (result.data ?? []).slice(0, limit) as Meeting[], truncated: (result.data?.length ?? 0) > limit, ready: !result.error, error: result.error ? setupMessage : null };
 }
-export async function findMeeting(client: StaffClient, userId: string, id: string,role?:"CEO"|"Admin") {
+export async function findMeeting(client: StaffClient, userId: string, id: string,role?:"CEO"|"Admin"|"HOD") {
   const queryFor = (columns:string) => {
     let query=client.from("calendar_occurrences").select(columns).eq("id",id);
     if(role!=="CEO"&&role!=="Admin")query=query.or(`organizer_id.eq.${userId},attendee_ids.cs.{${userId}}`);
@@ -62,11 +66,12 @@ export async function loadMeetingPeople(client:StaffClient,meetings:Meeting[]):P
     return result.error?[]:result.data??[];
   }catch{return []}
 }
-export async function loadDirectory(): Promise<Directory> {
+export async function loadDirectory(role?: "CEO"|"Admin"|"HOD", allowedDepartments: string[] = []): Promise<Directory> {
   const admin = calendarAdmin();
-  if (!admin) return { people: [], departments: [], ready: false };
-  const memberships = await admin.from("staff_memberships").select("user_id,role").eq("status", "active").in("role", ["ceo", "admin"]).order("user_id").limit(500);
-  if (memberships.error) return { people: [], departments: [], ready: false };
+  if (!admin) return { people: [], requiredParticipants: [], departments: [], ready: false };
+  const roles = ["ceo","admin","hod"];
+  const memberships = await admin.from("staff_memberships").select("user_id,role").eq("status", "active").in("role", roles).order("user_id").limit(500);
+  if (memberships.error) return { people: [], requiredParticipants: [], departments: [], ready: false };
   const ids = (memberships.data ?? []).map((person) => person.user_id);
   const batches = [];
   for (let offset=0; offset<ids.length; offset+=100) batches.push(ids.slice(offset,offset+100));
@@ -74,13 +79,26 @@ export async function loadDirectory(): Promise<Directory> {
     admin.from("connect_profiles").select("user_id,display_name").in("user_id", batch),
     admin.from("staff_department_assignments").select("user_id,department").in("user_id", batch),
   ])));
-  if (lookups.some(([profiles,assignments]) => profiles.error || assignments.error)) return { people: [], departments: [], ready: false };
+  if (lookups.some(([profiles,assignments]) => profiles.error || assignments.error)) return { people: [], requiredParticipants: [], departments: [], ready: false };
   const names = new Map(lookups.flatMap(([profiles]) => profiles.data ?? []).map((profile) => [profile.user_id, profile.display_name]));
   const assignments = lookups.flatMap(([,response]) => response.data ?? []);
+  const users = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  if (users.error) return { people: [], requiredParticipants: [], departments: [], ready: false };
+  const verified = new Set(users.data.users.filter((user) => user.email && /^[^@]+@enibrand\.com$/i.test(user.email)
+    && user.email_confirmed_at && !user.deleted_at && (!user.banned_until || new Date(user.banned_until) <= new Date())).map((user) => user.id));
+  let eligibleAssignments = role === "HOD" ? assignments.filter((row) => allowedDepartments.includes(row.department)) : assignments;
+  eligibleAssignments = eligibleAssignments.filter((row) => verified.has(row.user_id));
+  const eligibleIds = new Set(eligibleAssignments.map((row) => row.user_id));
   const people = (memberships.data ?? []).map((person) => ({ user_id: person.user_id, role: person.role,
     display_name: names.get(person.user_id) ?? `${person.role.toUpperCase()} · ${person.user_id.slice(0,6)}`,
+    departments: eligibleAssignments.filter((row) => row.user_id === person.user_id).map((row) => row.department),
+  })).filter((person) => verified.has(person.user_id) && (person.role === "ceo" || person.role === "admin"
+    || (role === "HOD" && eligibleIds.has(person.user_id)))) as Person[];
+  const requiredParticipants = (memberships.data ?? []).map((person) => ({ user_id: person.user_id, role: person.role,
+    display_name: names.get(person.user_id) ?? `${person.role.toUpperCase()} · ${person.user_id.slice(0,6)}`,
     departments: assignments.filter((row) => row.user_id === person.user_id).map((row) => row.department),
-  })) as Person[];
+  })).filter((person) => verified.has(person.user_id) && (person.role === "ceo" || person.role === "admin"
+    || (person.role === "hod" && assignments.some((row) => row.user_id === person.user_id && row.department === "communications")))) as Person[];
   const departments = Object.entries(departmentLabels).map(([id,label]) => ({ id, label, count: people.filter((person) => person.departments.includes(id)).length })).filter((department) => department.count > 0);
-  return { people, departments, ready: true };
+  return { people, requiredParticipants, departments, ready: true };
 }

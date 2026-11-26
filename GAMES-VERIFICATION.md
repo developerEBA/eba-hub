@@ -27,7 +27,7 @@
 
 ## Local browser method and limits
 
-The Browser plugin/skill was not available; Playwright MCP was used. Authenticated app navigation did not produce a usable signed-in view in the automated browser. To avoid modifying auth or applying a database, a temporary harness compiled the **actual** client components and CSS with the already-installed TypeScript/React. It rendered into an isolated document, with explicitly synthetic initial data, stubbed Next navigation, and no production server actions. The harness was removed after checking. This is component-level browser evidence, **not** an end-to-end deployment claim.
+Authenticated app navigation did not produce a usable signed-in view in the isolated browser check. To avoid modifying auth or applying a database, a temporary harness compiled the **actual** client components and CSS with the already-installed TypeScript/React. It rendered into an isolated document, with explicitly synthetic initial data, stubbed Next navigation, and no production server actions. The harness was removed after checking. This is component-level browser evidence, **not** an end-to-end deployment claim.
 
 - Desktop lounge: 1440×1100, six illustrations/cards, honest pending gates, no overflow.
 - Mobile lounge: 390×844, single-column cards, no horizontal overflow.
