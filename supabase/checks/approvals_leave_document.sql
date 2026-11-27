@@ -1,4 +1,3 @@
--- Run in development SQL Editor after uploading the private fixture and loading its row.
 begin;
 
 do $$

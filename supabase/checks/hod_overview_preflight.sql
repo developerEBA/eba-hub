@@ -1,4 +1,3 @@
--- Read-only prerequisites for 20261126100000_hod_overview_access.sql.
 with required_objects(name, object_name) as (values
   ('HOD active-assignment authorization','eba_private.hod_in_department(uuid,text)'),
   ('HOD dashboard membership authorization','eba_private.hod_dashboard_member(uuid)'),

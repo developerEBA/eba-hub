@@ -1,5 +1,3 @@
--- READ ONLY. Run against the intended project before applying the HOD
--- migration. This reports prerequisites only and returns no personal records.
 with required_objects(name, object_name) as (values
   ('Staff memberships','public.staff_memberships'),
   ('Real department assignments','public.staff_department_assignments'),

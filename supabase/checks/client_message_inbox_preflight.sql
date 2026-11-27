@@ -1,5 +1,3 @@
--- Read-only. Confirm the existing conversation tables, permission helpers,
--- notification constraints and realtime publication before 20261106001600.
 select to_regclass('public.client_conversation_messages') as messages,
   to_regclass('public.hub_notifications') as notifications,
   to_regclass('public.client_message_reads') as new_receipts,

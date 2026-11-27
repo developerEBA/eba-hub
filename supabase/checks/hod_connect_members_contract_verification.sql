@@ -1,5 +1,3 @@
--- One-row, read-only verification for the Connect member-list RPC after the
--- HOD migration or its compatibility repair. Safe when the function is absent.
 begin transaction read only;
 
 with target as (

@@ -1,5 +1,3 @@
--- Combined read-only diagnostic for the three active monthly recognition categories.
--- Historical weekly/yearly records are retained but excluded from active RPC scope.
 begin transaction read only;
 with expected_relations as (
   select name,to_regclass('public.'||name) as relation_oid

@@ -1,4 +1,3 @@
--- One result table, named PASS/FAIL checks. No writes, identities, hashes or credentials.
 begin transaction read only;
 with definition as(
  select coalesce(pg_get_functiondef(to_regprocedure('public.staff_access_control(text,uuid,jsonb)')),'') as body

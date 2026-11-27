@@ -1,5 +1,3 @@
--- Focused read-only check. One result table; no personal records or credentials.
--- Run as postgres. Includes an actual directory execution under service_role privileges.
 begin transaction read only;
 set local role service_role;
 with eligible as materialized (

@@ -1,5 +1,3 @@
--- POST-MIGRATION integration checks. Staging recommended. Creates no Google
--- resources. All changes below ROLLBACK. Log in once as test Admin and CEO first.
 begin;
 do $$
 declare admin_id uuid; admin_session uuid; ceo_id uuid; ceo_session uuid;
@@ -21,7 +19,6 @@ begin
     or has_table_privilege('anon','public.google_organizer_oauth_states','SELECT')
     or has_function_privilege('authenticated','public.google_organizer_authorize(text,uuid,uuid,jsonb)','EXECUTE')
     then raise exception 'Browser credential privilege leak'; end if;
-  -- Use the real service_role privileges, not postgres privileges, for RPCs.
   set local role service_role;
   begin
     perform public.google_organizer_authorize('disconnect',ceo_id,ceo_session,'{}');

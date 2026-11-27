@@ -1,4 +1,3 @@
--- Read-only. Inspect any client portal objects before applying 20261106001200.
 select table_name, column_name, data_type
 from information_schema.columns
 where table_schema = 'public'

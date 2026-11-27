@@ -1,5 +1,3 @@
--- READ ONLY: run as postgres before and after the forward migration. No token,
--- attendee email, Google event ID, join URL or private job payload is selected.
 begin transaction read only;
 select to_regclass('public.calendar_occurrences') as part1_occurrences,
   to_regclass('public.calendar_series') as part1_series,
@@ -22,8 +20,6 @@ where table_schema='public' and table_name in ('calendar_sync_jobs','google_orga
 select table_name,column_name,grantee from information_schema.column_privileges
 where table_schema='public' and table_name in ('calendar_occurrences','calendar_series') and grantee='authenticated'
   and column_name in ('provider_event_id','provider_calendar_id','provider_conference_id','provider_etag','meet_space_name','sync_error');
--- Before Part 2, Part 1 grants SELECT for all occurrence columns. After Part 2,
--- the private-column query above and all browser job grants must be empty.
 select relname,relrowsecurity from pg_class c join pg_namespace n on n.oid=c.relnamespace
 where n.nspname='public' and relname='calendar_sync_jobs';
 select p.oid::regprocedure as routine,p.prosecdef as security_definer,

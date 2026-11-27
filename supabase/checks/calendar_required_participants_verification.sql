@@ -1,5 +1,3 @@
--- One-row, read-only post-migration diagnostic. Missing objects become FAIL
--- flags instead of aborting the query.
 with catalog as (
   select
     to_regclass('public.calendar_occurrences') as occurrences,

@@ -1,4 +1,3 @@
--- Read-only aggregate preflight. No nominee identifiers or evidence text are returned.
 with schema_state as (
   select to_regclass('public.period_recognition_nominations') as relation_oid,
     (select count(*) = 7 from information_schema.columns

@@ -1,6 +1,3 @@
--- POST-MIGRATION integration test. Uses only named test accounts and rolls back
--- every meeting, reminder and idempotency record it creates. Run as postgres in
--- an isolated test database. This is NOT the read-only preflight.
 begin;
 select set_config('eba_test.admin',coalesce((select id::text from auth.users where email='eba-admin-test@enibrand.com'),''),true);
 select set_config('eba_test.ceo',coalesce((select id::text from auth.users where email='eba-ceo-test@enibrand.com'),''),true);
@@ -97,4 +94,3 @@ do $$ begin
   if exists(select 1 from public.calendar_occurrences where series_id=current_setting('eba_test.series')::uuid and status='scheduled') then raise exception 'Remaining-series cancellation failed'; end if;
 end $$;
 rollback;
--- Success means all assertions passed and all fixture writes were rolled back.

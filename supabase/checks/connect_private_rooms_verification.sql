@@ -1,5 +1,3 @@
--- Combined read-only post-migration diagnostic for private department rooms.
--- Safe before rollout: absent tables, columns, policies or functions are named FAIL rows.
 begin transaction read only;
 
 with objects(feature,object_name) as (values
@@ -67,8 +65,6 @@ select policy_name,case when exists(
     and (expected.relation_name<>'objects' or p.schemaname='storage')
 ) then 'PASS' else 'FAIL: policy missing' end as result
 from expected order by policy_name;
-
--- Dynamic SQL ensures the diagnostic still runs if the conversations table is absent.
 do $$
 declare d text; room_count integer; general_found integer;
 begin

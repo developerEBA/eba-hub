@@ -1,4 +1,3 @@
--- Read-only. Run before 20261106001500 and review any unexpected FK or policy.
 select conrelid::regclass as dependent_table, pg_get_constraintdef(oid) as definition
 from pg_constraint
 where contype = 'f' and confrelid = 'public.client_directory'::regclass

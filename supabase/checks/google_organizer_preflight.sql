@@ -1,5 +1,3 @@
--- READ ONLY. Run as postgres in the Supabase SQL editor before and after applying
--- 20261116143000_google_organizer_authorization.sql. Never selects credentials.
 begin transaction read only;
 select current_user, current_database(), current_setting('server_version') as postgres_version;
 select to_regclass('public.staff_memberships') as memberships,
@@ -14,7 +12,6 @@ select role,status,count(*) as staff_count from public.staff_memberships group b
 select has_table_privilege('service_role','auth.sessions','SELECT') as server_can_check_live_sessions,
        has_table_privilege('service_role','auth.users','SELECT') as server_can_check_staff_email,
        has_table_privilege('service_role','public.staff_memberships','SELECT') as server_can_check_active_admin;
--- After migration: browser_grants and browser_executable must both be empty.
 select grantee,table_name,privilege_type from information_schema.role_table_grants
 where table_schema='public' and table_name in ('google_organizer_connection','google_organizer_oauth_states')
   and grantee in ('PUBLIC','anon','authenticated');

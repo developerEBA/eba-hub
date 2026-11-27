@@ -1,4 +1,3 @@
--- One-row read-only verification after 20261126100000_hod_overview_access.sql.
 begin transaction read only;
 with targets as (
   select to_regprocedure('public.hod_department_approval_summary()') as summary_fn,

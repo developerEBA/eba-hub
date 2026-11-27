@@ -1,5 +1,3 @@
--- READ ONLY combined verification diagnostic. One row per named check. Missing
--- functions/tables are reported as FAIL without calling absent objects.
 with functions as (
  select
   pg_get_functiondef(to_regprocedure('eba_private.hod_dashboard_member(uuid)')) as hod_member,

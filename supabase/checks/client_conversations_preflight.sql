@@ -1,5 +1,3 @@
--- Read-only. Before applying 20261106001300, prerequisite columns and functions
--- should exist, and conversation_table / delete_rpc should be null.
 select
   to_regclass('public.client_directory') as directory_table,
   to_regclass('public.client_portal_access') as portal_access_table,

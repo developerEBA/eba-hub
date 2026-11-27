@@ -1,4 +1,3 @@
--- Read-only preflight. No records are created, changed, or emitted.
 begin transaction read only;
 with expected(object_name) as (values
  ('public.staff_memberships'),('public.staff_department_assignments'),('auth.users'),('public.announcements'),

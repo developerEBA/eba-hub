@@ -1,5 +1,3 @@
--- Read-only catalog check for the failed 20261126120000 migration.
--- Returns one row and does not inspect or change meeting/person records.
 begin transaction read only;
 with objects as (
   select

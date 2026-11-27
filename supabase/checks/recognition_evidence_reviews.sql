@@ -1,5 +1,3 @@
--- Development only. Requires the CEO, Admin, and disposable active staff accounts from README.md.
--- All nominations, reviews, and awards created here are rolled back.
 begin;
 
 select set_config('eba_test.ceo', coalesce((select id::text from auth.users where email = 'eba-ceo-test@enibrand.com'), ''), true);

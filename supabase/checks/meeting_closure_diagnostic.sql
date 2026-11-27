@@ -1,5 +1,3 @@
--- Combined before/after rollout diagnostic. Run as postgres; READ ONLY + ROLLBACK.
--- Only named PASS/FAIL flags and aggregate counts; no secrets, URLs or identities.
 begin transaction read only;
 with checks(check_name,passed,explanation) as(values
  ('parts_1_2_3_and_import_present',
@@ -29,16 +27,12 @@ with checks(check_name,passed,explanation) as(values
   and grantee in('anon','authenticated','PUBLIC') and column_name in('provider_event_id','provider_calendar_id','provider_etag')),'Provider identifiers must never be browser-readable')
 )
 select check_name,case when passed then 'PASS' else 'FAIL' end as result,explanation from checks order by check_name;
-
--- Per-table privilege checks cover table grants and inherited column grants.
 select 'private_table_'||t||'_'||r as check_name,
  case when to_regclass('public.'||t) is null then 'FAIL'
   when has_any_column_privilege(r,'public.'||t,'SELECT,INSERT,UPDATE,REFERENCES')
    or has_table_privilege(r,'public.'||t,'DELETE,TRUNCATE,TRIGGER') then 'FAIL' else 'PASS' end as result
  from unnest(array['calendar_call_end_jobs','calendar_call_end_space_leases','google_organizer_connection']) t
  cross join unnest(array['anon','authenticated']) r;
-
--- Dynamic reads let this same file run before migration without missing-table errors.
 do $$
 declare n bigint; enabled boolean;
 begin
@@ -64,7 +58,6 @@ begin
   execute $q$select count(*) from public.staff_memberships where role='admin' and status='active'$q$ into n;
   raise notice 'active_admin_membership_present: %',case when n>0 then 'PASS' else 'FAIL' end;
  end if;
- -- SQL cannot read server env or inspect encrypted token grants without using credentials.
  raise notice 'runtime_scope_and_provider_eligibility: NOT VERIFIED (use documented explicit disposable-call acceptance)';
  raise notice 'scheduler_deployment_and_120_second_runtime: NOT VERIFIED (operator configuration)';
 end $$;

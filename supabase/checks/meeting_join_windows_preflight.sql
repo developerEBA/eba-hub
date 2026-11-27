@@ -1,4 +1,3 @@
--- Read-only; run as postgres. Never returns tokens, identities or meeting details.
 begin transaction read only;
 select to_regclass('public.calendar_occurrences') is not null as occurrences_present,
  to_regclass('public.google_organizer_connection') is not null as google_storage_present,
@@ -10,7 +9,6 @@ select column_name from information_schema.columns
  and column_name in('version','starts_at','ends_at','status','join_url','source','provider_event_id','provider_calendar_id','joining_closed_at','call_end_status')
  order by column_name;
 select count(*) as active_admin_memberships from public.staff_memberships where status='active' and role='admin';
--- Expected false for anon/authenticated after migration. NULL means not installed.
 select r as role_name,t as private_table,
  case when to_regclass('public.'||t) is null then null else has_table_privilege(r,'public.'||t,'SELECT') end as can_select,
  case when to_regclass('public.'||t) is null then null else has_table_privilege(r,'public.'||t,'INSERT') end as can_insert

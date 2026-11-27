@@ -1,5 +1,3 @@
--- Read-only preflight for 20261121100000_private_department_rooms.sql.
--- Run after Connect through 20261106001400 and the staff assignment/access migrations.
 begin transaction read only;
 
 select check_name,case when exists(select 1 from pg_class where oid=to_regclass(object_name))
@@ -13,8 +11,6 @@ from (values
   ('Staff access profiles','public.staff_access_profiles')
 ) expected(check_name,object_name)
 order by check_name;
-
--- These rows contain IDs, department labels and counts only; no message content.
 select c.id,
   case c.id
     when '00000000-0000-4000-8000-000000000002'::uuid then 'graphics'

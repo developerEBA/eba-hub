@@ -1,4 +1,3 @@
--- POST-MIGRATION, staging/idle database only. All writes ROLLBACK. No Google calls.
 begin;
 do $$
 declare admin_id uuid; ceo_id uuid; req uuid:=gen_random_uuid(); first_id uuid; second_id uuid;

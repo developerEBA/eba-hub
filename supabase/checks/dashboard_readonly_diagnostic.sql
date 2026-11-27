@@ -1,6 +1,3 @@
--- Combined CEO/Admin dashboard schema and access diagnostic.
--- Run in Supabase SQL Editor as postgres. Read-only: no records are changed.
--- Every expected object is reported by name; absent migrations yield FAIL rows.
 begin transaction read only;
 
 with expected(feature, object_name, needs_rls) as (values

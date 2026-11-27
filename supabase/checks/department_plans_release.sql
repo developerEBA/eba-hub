@@ -1,5 +1,3 @@
--- Run on the target database before releasing Department Plans.
--- Check installed effects so SQL Editor and CLI deployments are both supported.
 do $$
 declare
   relation regclass;

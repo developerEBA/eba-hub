@@ -1,4 +1,3 @@
--- Read-only catalog preflight. Safe to run before Calendar objects exist.
 select jsonb_build_object(
   'calendar_occurrences', to_regclass('public.calendar_occurrences') is not null,
   'calendar_series', to_regclass('public.calendar_series') is not null,

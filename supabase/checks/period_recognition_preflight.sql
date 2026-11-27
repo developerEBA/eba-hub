@@ -1,5 +1,3 @@
--- Read-only period-recognition deployment preflight. Missing objects are
--- reported as rows rather than causing the preflight itself to fail.
 with expected(name, relation_name) as (
   values ('nominations','period_recognition_nominations'),
          ('reviews','period_recognition_reviews'),

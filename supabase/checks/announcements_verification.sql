@@ -1,4 +1,3 @@
--- One combined read-only PASS/FAIL diagnostic. It remains runnable if release objects are absent.
 begin transaction read only;
 with expected(name) as (values ('public.announcements'),('public.announcement_revisions'),
  ('public.announcement_acknowledgements'),('public.announcement_audit'))
