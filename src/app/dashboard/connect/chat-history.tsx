@@ -27,7 +27,17 @@ function mergeMessages(existing: ConnectMessage[], incoming: ConnectMessage[]) {
 
 type Batch = { messages: ConnectMessage[]; hasOlder: boolean };
 
-export function ChatHistory({ conversation, latest, members, userId, general, unread, visible, today, yesterday }: {
+export function ChatHistory({
+  conversation,
+  latest,
+  members,
+  userId,
+  general,
+  unread,
+  visible,
+  today,
+  yesterday,
+}: {
   conversation: string;
   latest: Batch;
   members: ConnectProfile[];
@@ -40,13 +50,18 @@ export function ChatHistory({ conversation, latest, members, userId, general, un
 }) {
   const router = useRouter();
   const [history, setHistory] = useState(() => ({
-    latest, messages: latest.messages, hasOlder: latest.hasOlder,
+    latest,
+    messages: latest.messages,
+    hasOlder: latest.hasOlder,
   }));
   if (history.latest !== latest) {
     setHistory({
       latest,
       messages: mergeMessages(history.messages, latest.messages),
-      hasOlder: history.messages[0]?.id < (latest.messages[0]?.id ?? 0) ? history.hasOlder : latest.hasOlder,
+      hasOlder:
+        history.messages[0]?.id < (latest.messages[0]?.id ?? 0)
+          ? history.hasOlder
+          : latest.hasOlder,
     });
   }
 
@@ -61,18 +76,25 @@ export function ChatHistory({ conversation, latest, members, userId, general, un
 
   useEffect(() => () => request.current?.abort(), []);
 
-  const refreshMessage = useCallback(async (id: string) => {
-    const url = "/dashboard/connect/history?" + new URLSearchParams({ chat: conversation, message: id });
-    try {
-      const response = await fetch(url, { cache: "no-store" });
-      if (!response.ok || response.redirected) return;
-      const updated: ConnectMessage = await response.json();
-      setHistory((current) => current.messages.some((item) => item.id === updated.id)
-        ? { ...current, messages: mergeMessages(current.messages, [updated]) } : current);
-    } catch {
-
-    }
-  }, [conversation]);
+  const refreshMessage = useCallback(
+    async (id: string) => {
+      const url =
+        "/dashboard/connect/history?" + new URLSearchParams({ chat: conversation, message: id });
+      try {
+        const response = await fetch(url, { cache: "no-store" });
+        if (!response.ok || response.redirected) return;
+        const updated: ConnectMessage = await response.json();
+        setHistory((current) =>
+          current.messages.some((item) => item.id === updated.id)
+            ? { ...current, messages: mergeMessages(current.messages, [updated]) }
+            : current,
+        );
+      } catch {
+        return;
+      }
+    },
+    [conversation],
+  );
 
   const refreshLatest = useCallback(async () => {
     const url = "/dashboard/connect/history?" + new URLSearchParams({ chat: conversation });
@@ -84,16 +106,26 @@ export function ChatHistory({ conversation, latest, members, userId, general, un
       }
       if (!response.ok) return;
       const batch: Batch = await response.json();
-      setHistory((current) => ({ ...current, messages: mergeMessages(current.messages, batch.messages), hasOlder: batch.hasOlder }));
+      setHistory((current) => ({
+        ...current,
+        messages: mergeMessages(current.messages, batch.messages),
+        hasOlder: batch.hasOlder,
+      }));
     } catch {
-
+      return;
     }
   }, [conversation, router]);
 
   useEffect(() => {
-    const source = new EventSource("/dashboard/connect/events?chat=" + encodeURIComponent(conversation));
-    const update = (event: MessageEvent<string>) => { void refreshMessage(event.data); };
-    const refresh = () => { void refreshLatest(); };
+    const source = new EventSource(
+      "/dashboard/connect/events?chat=" + encodeURIComponent(conversation),
+    );
+    const update = (event: MessageEvent<string>) => {
+      void refreshMessage(event.data);
+    };
+    const refresh = () => {
+      void refreshLatest();
+    };
     const revoke = () => {
       source.close();
       router.replace("/dashboard/connect");
@@ -123,19 +155,24 @@ export function ChatHistory({ conversation, latest, members, userId, general, un
     setLoading(true);
     setError(false);
     try {
-      const url = "/dashboard/connect/history?" + new URLSearchParams({ chat: conversation, before: String(oldest) });
+      const url =
+        "/dashboard/connect/history?" +
+        new URLSearchParams({ chat: conversation, before: String(oldest) });
       const response = await fetch(url, { signal: controller.signal, cache: "no-store" });
       if (!response.ok || response.redirected) throw new Error("History unavailable");
       const batch: Batch = await response.json();
       const panel = viewport.current;
       if (panel) {
         const panelTop = panel.getBoundingClientRect().top;
-        const element = Array.from(panel.querySelectorAll<HTMLElement>("[data-message]"))
-          .find((message) => message.getBoundingClientRect().bottom > panelTop);
+        const element = Array.from(panel.querySelectorAll<HTMLElement>("[data-message]")).find(
+          (message) => message.getBoundingClientRect().bottom > panelTop,
+        );
         if (element) anchor.current = { element, top: element.getBoundingClientRect().top };
       }
       setHistory((current) => ({
-        ...current, messages: mergeMessages(current.messages, batch.messages), hasOlder: batch.hasOlder,
+        ...current,
+        messages: mergeMessages(current.messages, batch.messages),
+        hasOlder: batch.hasOlder,
       }));
     } catch {
       if (!controller.signal.aborted) setError(true);
@@ -158,14 +195,33 @@ export function ChatHistory({ conversation, latest, members, userId, general, un
 
   return (
     <div className="eba-connect__timeline">
-      {visible && atBottom && <ReadConversation conversation={conversation} through={newest} unread={unread} />}
-      <div className="eba-connect__history" ref={viewport} onScroll={onScroll} tabIndex={0} aria-label="Message history">
+      {visible && atBottom && (
+        <ReadConversation conversation={conversation} through={newest} unread={unread} />
+      )}
+      <div
+        className="eba-connect__history"
+        ref={viewport}
+        onScroll={onScroll}
+        tabIndex={0}
+        aria-label="Message history"
+      >
         {history.hasOlder && (
-          <button type="button" className="eba-connect__older" onClick={loadOlder} disabled={loading}>
-            {loading ? "Loading earlier messages…" : error ? "Could not load messages. Retry" : "Load earlier messages"}
+          <button
+            type="button"
+            className="eba-connect__older"
+            onClick={loadOlder}
+            disabled={loading}
+          >
+            {loading
+              ? "Loading earlier messages…"
+              : error
+                ? "Could not load messages. Retry"
+                : "Load earlier messages"}
           </button>
         )}
-        {!history.messages.length ? <p>No messages yet</p> : (
+        {!history.messages.length ? (
+          <p>No messages yet</p>
+        ) : (
           <ol className="eba-connect__messages">
             {history.messages.map((message, index) => {
               const date = new Date(message.sent_at);
@@ -174,35 +230,82 @@ export function ChatHistory({ conversation, latest, members, userId, general, un
               const separator = !previous || dayKey.format(new Date(previous.sent_at)) !== day;
               const own = message.sender_id === userId;
               const incomingGroup = general && !own;
-              const showSender = incomingGroup && (separator || previous?.sender_id !== message.sender_id);
+              const showSender =
+                incomingGroup && (separator || previous?.sender_id !== message.sender_id);
               const sender = profiles.get(message.sender_id);
               const audio = "/dashboard/connect/audio/" + message.id;
               return (
                 <Fragment key={message.id}>
-                  {separator && <li className="eba-connect__date"><time dateTime={day}>
-                    {day === today ? "Today" : day === yesterday ? "Yesterday" : fullDate.format(date)}
-                  </time></li>}
-                  <li data-message={message.id} data-own={own} data-kind={message.kind} data-group={incomingGroup}>
-                    {incomingGroup && <div className="eba-connect__bubble-avatar">
-                      {showSender && <Person profile={sender} isSelf={false} avatarOnly />}
-                    </div>}
+                  {separator && (
+                    <li className="eba-connect__date">
+                      <time dateTime={day}>
+                        {day === today
+                          ? "Today"
+                          : day === yesterday
+                            ? "Yesterday"
+                            : fullDate.format(date)}
+                      </time>
+                    </li>
+                  )}
+                  <li
+                    data-message={message.id}
+                    data-own={own}
+                    data-kind={message.kind}
+                    data-group={incomingGroup}
+                  >
+                    {incomingGroup && (
+                      <div className="eba-connect__bubble-avatar">
+                        {showSender && <Person profile={sender} isSelf={false} avatarOnly />}
+                      </div>
+                    )}
                     <div className="eba-connect__bubble">
-                      {showSender && <strong className="eba-connect__bubble-name">{sender?.display_name ?? "Former member"}</strong>}
-                      {message.deleted_at ? <p className="eba-connect__deleted">Message deleted</p> :
-                        message.kind === "photo" || message.kind === "document" ? (
+                      {showSender && (
+                        <strong className="eba-connect__bubble-name">
+                          {sender?.display_name ?? "Former member"}
+                        </strong>
+                      )}
+                      {message.deleted_at ? (
+                        <p className="eba-connect__deleted">Message deleted</p>
+                      ) : message.kind === "photo" || message.kind === "document" ? (
                         <MessageAttachment message={message} />
                       ) : message.kind === "voice" ? (
                         <VoiceNote src={audio} />
                       ) : message.kind === "sticker" && isSticker(message.body) ? (
-                        <p className="eba-connect__sticker" role="img" aria-label={stickers[message.body].label}>{stickers[message.body].glyph}</p>
-                      ) : <p>{mentionParts(message.body).map((part, partIndex) => {
-                        const id = mentionId(part);
-                        return id ? <strong className="eba-connect__mention" key={partIndex}>@{profiles.get(id)?.display_name ?? "Former member"}</strong> : part;
-                      })}</p>}
+                        <p
+                          className="eba-connect__sticker"
+                          role="img"
+                          aria-label={stickers[message.body].label}
+                        >
+                          {stickers[message.body].glyph}
+                        </p>
+                      ) : (
+                        <p>
+                          {mentionParts(message.body).map((part, partIndex) => {
+                            const id = mentionId(part);
+                            return id ? (
+                              <strong className="eba-connect__mention" key={partIndex}>
+                                @{profiles.get(id)?.display_name ?? "Former member"}
+                              </strong>
+                            ) : (
+                              part
+                            );
+                          })}
+                        </p>
+                      )}
                       <footer className="eba-connect__bubble-meta">
-                        <time dateTime={message.sent_at}>{clock.format(date)}{message.edited_at && !message.deleted_at ? " · Edited" : ""}</time>
-                        {own && !message.deleted_at && <MessageActions message={message} profiles={profiles}
-                          onChange={() => { void refreshMessage(String(message.id)); }} />}
+                        <time dateTime={message.sent_at}>
+                          {clock.format(date)}
+                          {message.edited_at && !message.deleted_at ? " · Edited" : ""}
+                        </time>
+                        {own && !message.deleted_at && (
+                          <MessageActions
+                            message={message}
+                            profiles={profiles}
+                            onChange={() => {
+                              void refreshMessage(String(message.id));
+                            }}
+                          />
+                        )}
                       </footer>
                     </div>
                   </li>
@@ -213,7 +316,9 @@ export function ChatHistory({ conversation, latest, members, userId, general, un
         )}
       </div>
       {!atBottom && (newest ?? 0) > seen && (
-        <button type="button" className="eba-connect__jump" onClick={() => setAtBottom(true)}>↓ New messages</button>
+        <button type="button" className="eba-connect__jump" onClick={() => setAtBottom(true)}>
+          ↓ New messages
+        </button>
       )}
     </div>
   );

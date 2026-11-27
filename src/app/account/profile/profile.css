@@ -1,17 +1,230 @@
-.account-profile-page{min-height:100svh;padding:clamp(1rem,4vw,3rem);background:#f7f6f1;color:#173a2e}
-.account-profile-page>header{display:flex;align-items:center;justify-content:space-between;max-width:58rem;margin:0 auto 3rem}
-.account-profile-page__brand{display:grid;gap:.25rem;width:fit-content}.account-profile-page__brand>span{font-size:.58rem;letter-spacing:.14em;color:#567064}
-.account-profile-page>header form button,.account-profile button{min-height:2.65rem;padding:.6rem 1rem;border:1px solid #d3ded4;border-radius:.65rem;background:#fff;color:#173a2e;font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
-.account-profile-page__intro{max-width:58rem;margin:0 auto 1.4rem}.account-profile-page__intro>p,.account-profile__eyebrow{color:#62766c;font-size:.68rem;font-weight:700;letter-spacing:.12em}
-.account-profile-page__intro h1{margin:.35rem 0;font:500 clamp(2rem,4vw,2.75rem)/1.15 Georgia,serif;letter-spacing:-.035em}.account-profile-page__intro>span{color:#62766c;font-size:.85rem}
-.account-profile{max-width:58rem;margin-inline:auto;padding:clamp(1.1rem,3vw,2rem);border:1px solid #e1e4da;border-radius:1.1rem;background:#fff;box-shadow:0 10px 32px #14392a0a}
-.account-profile>header{display:flex;align-items:start;justify-content:space-between;gap:1rem}.account-profile>header h2{margin:.25rem 0;font:500 1.55rem Georgia,serif}.account-profile>header p:last-child{color:#65766d;font-size:.85rem}.account-profile>header>span{padding:.35rem .7rem;border-radius:999px;background:#edf3ec;color:#315640;font-size:.72rem;font-weight:700}
-.account-profile__photo{display:flex;align-items:center;gap:1rem;margin:1.4rem 0;padding:1rem;border-radius:.8rem;background:#f8f8f4}.account-profile__photo>span{display:grid;place-items:center;width:5rem;height:5rem;flex:none;overflow:hidden;border-radius:50%;background:#e2eee5;color:#1d523a;font-size:1.15rem;font-weight:700}.account-profile__photo img{width:100%;height:100%;object-fit:cover}.account-profile__photo label{display:grid;gap:.45rem;font-size:.84rem;font-weight:650}.account-profile__photo input{max-width:100%;font-size:.78rem}.account-profile__photo small,.account-profile form small{color:#6b7a71;font-size:.7rem;font-weight:400}
-.account-profile form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.account-profile form>label{display:grid;align-content:start;gap:.4rem;font-size:.78rem;font-weight:650}.account-profile form input{width:100%;min-height:2.7rem;padding:.65rem .75rem;border:1px solid #d6dfd6;border-radius:.6rem;background:#fff;font:inherit;font-size:.88rem;font-weight:400;color:#203c30}.account-profile form>button{grid-column:1/-1;justify-self:start;background:#063c2d;border-color:#063c2d;color:white}.account-profile button:disabled{opacity:.55;cursor:wait}.account-profile__notice,.account-profile__error{padding:.75rem .9rem;border-left:3px solid #FDE342;background:#fffbea;color:#435d4d;font-size:.82rem;line-height:1.5}.account-profile__error{border-left-color:#b04b38;background:#fff2ee;color:#713a30}.account-profile :is(a,button,input):focus-visible{outline:3px solid #FDE342;outline-offset:2px}
-.account-profile__security { display:grid; gap:.6rem; margin-top:1.6rem; padding-top:1.35rem; border-top:1px solid #e4e9e0; }
-.account-profile__security h3 { margin:.2rem 0; color:#173a2e; font-size:1.05rem; }
-.account-profile__security > div > p:last-child { margin:.25rem 0; color:#65766d; font-size:.82rem; }
-.account-profile .account-profile__password-form { grid-template-columns:repeat(3,minmax(0,1fr)); }
-.account-profile__password-form > button { min-height:2.65rem; }
-@media(max-width:600px){.account-profile-page>header{margin-bottom:2rem}.account-profile form{grid-template-columns:1fr}.account-profile form>button{grid-column:1}.account-profile__photo{align-items:flex-start;flex-wrap:wrap}}
-@media(max-width:600px){.account-profile .account-profile__password-form{grid-template-columns:1fr}}
+.account-profile-page {
+  min-height: 100svh;
+  padding: clamp(1rem, 4vw, 3rem);
+  background: #f7f6f1;
+  color: #173a2e;
+}
+.account-profile-page > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 58rem;
+  margin: 0 auto 3rem;
+}
+.account-profile-page__brand {
+  display: grid;
+  gap: 0.25rem;
+  width: fit-content;
+}
+.account-profile-page__brand > span {
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  color: #567064;
+}
+.account-profile-page > header form button,
+.account-profile button {
+  min-height: 2.65rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid #d3ded4;
+  border-radius: 0.65rem;
+  background: #fff;
+  color: #173a2e;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.account-profile-page__intro {
+  max-width: 58rem;
+  margin: 0 auto 1.4rem;
+}
+.account-profile-page__intro > p,
+.account-profile__eyebrow {
+  color: #62766c;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+.account-profile-page__intro h1 {
+  margin: 0.35rem 0;
+  font:
+    500 clamp(2rem, 4vw, 2.75rem)/1.15 Georgia,
+    serif;
+  letter-spacing: -0.035em;
+}
+.account-profile-page__intro > span {
+  color: #62766c;
+  font-size: 0.85rem;
+}
+.account-profile {
+  max-width: 58rem;
+  margin-inline: auto;
+  padding: clamp(1.1rem, 3vw, 2rem);
+  border: 1px solid #e1e4da;
+  border-radius: 1.1rem;
+  background: #fff;
+  box-shadow: 0 10px 32px #14392a0a;
+}
+.account-profile > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.account-profile > header h2 {
+  margin: 0.25rem 0;
+  font:
+    500 1.55rem Georgia,
+    serif;
+}
+.account-profile > header p:last-child {
+  color: #65766d;
+  font-size: 0.85rem;
+}
+.account-profile > header > span {
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: #edf3ec;
+  color: #315640;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.account-profile__photo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.4rem 0;
+  padding: 1rem;
+  border-radius: 0.8rem;
+  background: #f8f8f4;
+}
+.account-profile__photo > span {
+  display: grid;
+  place-items: center;
+  width: 5rem;
+  height: 5rem;
+  flex: none;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #e2eee5;
+  color: #1d523a;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.account-profile__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.account-profile__photo label {
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.84rem;
+  font-weight: 650;
+}
+.account-profile__photo input {
+  max-width: 100%;
+  font-size: 0.78rem;
+}
+.account-profile__photo small,
+.account-profile form small {
+  color: #6b7a71;
+  font-size: 0.7rem;
+  font-weight: 400;
+}
+.account-profile form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.account-profile form > label {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+.account-profile form input {
+  width: 100%;
+  min-height: 2.7rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #d6dfd6;
+  border-radius: 0.6rem;
+  background: #fff;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 400;
+  color: #203c30;
+}
+.account-profile form > button {
+  grid-column: 1/-1;
+  justify-self: start;
+  background: #063c2d;
+  border-color: #063c2d;
+  color: white;
+}
+.account-profile button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.account-profile__notice,
+.account-profile__error {
+  padding: 0.75rem 0.9rem;
+  border-left: 3px solid #fde342;
+  background: #fffbea;
+  color: #435d4d;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+.account-profile__error {
+  border-left-color: #b04b38;
+  background: #fff2ee;
+  color: #713a30;
+}
+.account-profile :is(a, button, input):focus-visible {
+  outline: 3px solid #fde342;
+  outline-offset: 2px;
+}
+.account-profile__security {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 1.6rem;
+  padding-top: 1.35rem;
+  border-top: 1px solid #e4e9e0;
+}
+.account-profile__security h3 {
+  margin: 0.2rem 0;
+  color: #173a2e;
+  font-size: 1.05rem;
+}
+.account-profile__security > div > p:last-child {
+  margin: 0.25rem 0;
+  color: #65766d;
+  font-size: 0.82rem;
+}
+.account-profile .account-profile__password-form {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.account-profile__password-form > button {
+  min-height: 2.65rem;
+}
+@media (max-width: 600px) {
+  .account-profile-page > header {
+    margin-bottom: 2rem;
+  }
+  .account-profile form {
+    grid-template-columns: 1fr;
+  }
+  .account-profile form > button {
+    grid-column: 1;
+  }
+  .account-profile__photo {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 600px) {
+  .account-profile .account-profile__password-form {
+    grid-template-columns: 1fr;
+  }
+}

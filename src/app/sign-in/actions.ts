@@ -13,7 +13,10 @@ export async function signInStaff(_previous: string | null, form: FormData) {
   if (typeof username !== "string" || typeof password !== "string" || !password) return signInError;
 
   const prefix = username.trim().toLowerCase();
-  if (prefix.length > 64 || !/^[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*$/.test(prefix)) {
+  if (
+    prefix.length > 64 ||
+    !/^[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*$/.test(prefix)
+  ) {
     return signInError;
   }
 
@@ -36,11 +39,7 @@ export async function signInStaff(_previous: string | null, form: FormData) {
   }
 
   if (!accountRole) return signInError;
-  try {
-    await recordConnectSignIn(data.user.id);
-  } catch {
-
-  }
+  await recordConnectSignIn(data.user.id).catch(() => undefined);
   redirect(accountRole === "Employee" ? "/account/profile" : "/dashboard");
 }
 

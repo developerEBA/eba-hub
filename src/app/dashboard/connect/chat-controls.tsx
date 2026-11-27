@@ -10,32 +10,67 @@ import { DashboardIcon } from "../navigation";
 
 function Avatar({ profile }: { profile: ConnectProfile | undefined }) {
   const [failed, setFailed] = useState(false);
-  const initials = profile?.display_name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join("") || "?";
+  const initials =
+    profile?.display_name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("") || "?";
   const url = profile?.avatar_url;
   const safeProfilePath = url && /^\/account\/profile\/photo\/[\da-f-]{36}$/i.test(url);
   return (
     <span className="eba-connect__avatar" aria-hidden="true">
       {(url?.startsWith("https://") || safeProfilePath) && !failed ? (
-        <Image src={url} alt="" width={34} height={34} unoptimized referrerPolicy="no-referrer" onError={() => setFailed(true)} />
-      ) : initials.toUpperCase()}
+        <Image
+          src={url}
+          alt=""
+          width={34}
+          height={34}
+          unoptimized
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        initials.toUpperCase()
+      )}
     </span>
   );
 }
 
-export function Person({ profile, isSelf, avatarOnly }: {
+export function Person({
+  profile,
+  isSelf,
+  avatarOnly,
+}: {
   profile: ConnectProfile | undefined;
   isSelf: boolean;
   avatarOnly?: boolean;
 }) {
   const [error, action, pending] = useActionState(openDirectMessage, null);
   const name = profile?.display_name ?? "Former member";
-  const identity = <><Avatar profile={profile} />{!avatarOnly && <><span>{name}</span>{isSelf && <small className="eba-connect__self">You</small>}</>}</>;
+  const identity = (
+    <>
+      <Avatar profile={profile} />
+      {!avatarOnly && (
+        <>
+          <span>{name}</span>
+          {isSelf && <small className="eba-connect__self">You</small>}
+        </>
+      )}
+    </>
+  );
   if (!profile || isSelf) return <span className="eba-connect__person">{identity}</span>;
 
   return (
     <form action={action}>
       <input type="hidden" name="recipient" value={profile.user_id} />
-      <button type="submit" className="eba-connect__person" disabled={pending} aria-label={`Open chat with ${name}`}>
+      <button
+        type="submit"
+        className="eba-connect__person"
+        disabled={pending}
+        aria-label={`Open chat with ${name}`}
+      >
         {identity}
       </button>
       {error && <p role="alert">{error}</p>}
@@ -43,7 +78,13 @@ export function Person({ profile, isSelf, avatarOnly }: {
   );
 }
 
-export function Members({ members, userId, title = "EBA General members", description = "Select a teammate to start a private chat.", allowDirectMessage = true }: {
+export function Members({
+  members,
+  userId,
+  title = "EBA General members",
+  description = "Select a teammate to start a private chat.",
+  allowDirectMessage = true,
+}: {
   members: ConnectProfile[];
   userId: string;
   title?: string;
@@ -51,7 +92,9 @@ export function Members({ members, userId, title = "EBA General members", descri
   allowDirectMessage?: boolean;
 }) {
   const [search, setSearch] = useState("");
-  const matches = members.filter((member) => member.display_name.toLowerCase().includes(search.trim().toLowerCase()));
+  const matches = members.filter((member) =>
+    member.display_name.toLowerCase().includes(search.trim().toLowerCase()),
+  );
   return (
     <details className="eba-connect__members">
       <summary>
@@ -59,24 +102,50 @@ export function Members({ members, userId, title = "EBA General members", descri
         Members <span className="eba-connect__member-count">{members.length}</span>
       </summary>
       <div className="eba-connect__member-panel">
-        <header><strong>{title}</strong><p>{description}</p></header>
+        <header>
+          <strong>{title}</strong>
+          <p>{description}</p>
+        </header>
         <label className="eba-connect__member-search">
           <span className="sr-only">Search members</span>
           <DashboardIcon path="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 5 5" />
-          <input type="search" placeholder="Find a teammate" value={search} onChange={(event) => setSearch(event.target.value)} />
+          <input
+            type="search"
+            placeholder="Find a teammate"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
         </label>
         {matches.length ? (
-          <ul>{matches.map((member) => <li key={member.user_id}>{allowDirectMessage
-            ? <Person profile={member} isSelf={member.user_id === userId} />
-            : <span className="eba-connect__person"><Avatar profile={member} />{member.display_name}{member.user_id === userId && <small className="eba-connect__self">You</small>}</span>}
-          </li>)}</ul>
-        ) : <p>No matching members.</p>}
+          <ul>
+            {matches.map((member) => (
+              <li key={member.user_id}>
+                {allowDirectMessage ? (
+                  <Person profile={member} isSelf={member.user_id === userId} />
+                ) : (
+                  <span className="eba-connect__person">
+                    <Avatar profile={member} />
+                    {member.display_name}
+                    {member.user_id === userId && <small className="eba-connect__self">You</small>}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No matching members.</p>
+        )}
       </div>
     </details>
   );
 }
 
-export function ConnectComposer({ conversation, body, setBody, members }: {
+export function ConnectComposer({
+  conversation,
+  body,
+  setBody,
+  members,
+}: {
   conversation: string;
   body: string;
   setBody: (value: string) => void;
@@ -86,55 +155,85 @@ export function ConnectComposer({ conversation, body, setBody, members }: {
   const tagged = useRef(new Map<string, string>());
   const [mentionOpen, setMentionOpen] = useState(false);
   const match = mentionOpen ? /(?:^|\s)@([^@\n]*)$/.exec(body) : null;
-  const suggestions = match ? members.filter((member) =>
-    member.display_name.toLowerCase().includes(match[1].trim().toLowerCase())).slice(0, 8) : [];
-  const [error, action, sending] = useActionState(async (previous: string | null, form: FormData) => {
-    retryId.current ??= crypto.randomUUID();
-    form.set("clientId", retryId.current);
-    form.set("body", encodeMentions(body, tagged.current));
-    try {
-      const result = await sendConnectMessage(previous, form);
-      if (!result) {
-        retryId.current = null;
-        tagged.current.clear();
-        setMentionOpen(false);
-        setBody("");
+  const suggestions = match
+    ? members
+        .filter((member) =>
+          member.display_name.toLowerCase().includes(match[1].trim().toLowerCase()),
+        )
+        .slice(0, 8)
+    : [];
+  const [error, action, sending] = useActionState(
+    async (previous: string | null, form: FormData) => {
+      retryId.current ??= crypto.randomUUID();
+      form.set("clientId", retryId.current);
+      form.set("body", encodeMentions(body, tagged.current));
+      try {
+        const result = await sendConnectMessage(previous, form);
+        if (!result) {
+          retryId.current = null;
+          tagged.current.clear();
+          setMentionOpen(false);
+          setBody("");
+        }
+        return result;
+      } catch {
+        return "Message could not be sent. Try again.";
       }
-      return result;
-    } catch {
-      return "Message could not be sent. Try again.";
-    }
-  }, null);
+    },
+    null,
+  );
 
   return (
     <form className="eba-connect__composer" action={action}>
       <input type="hidden" name="conversation" value={conversation} />
-      <label htmlFor="connect-message" className="sr-only">Message</label>
+      <label htmlFor="connect-message" className="sr-only">
+        Message
+      </label>
       <div>
-        <textarea id="connect-message" name="body" rows={1} required maxLength={4000}
+        <textarea
+          id="connect-message"
+          name="body"
+          rows={1}
+          required
+          maxLength={4000}
           onKeyDown={(event) => {
-            if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing && !suggestions.length) {
+            if (
+              event.key === "Enter" &&
+              !event.shiftKey &&
+              !event.nativeEvent.isComposing &&
+              !suggestions.length
+            ) {
               event.preventDefault();
               if (!sending && body.trim()) event.currentTarget.form?.requestSubmit();
             }
           }}
-          value={body} readOnly={sending} onChange={(event) => {
+          value={body}
+          readOnly={sending}
+          onChange={(event) => {
             retryId.current = null;
             setBody(event.target.value);
             setMentionOpen(true);
-          }} />
-        <button type="submit" disabled={sending}>{sending ? "Sending…" : "Send"}</button>
+          }}
+        />
+        <button type="submit" disabled={sending}>
+          {sending ? "Sending…" : "Send"}
+        </button>
       </div>
       {suggestions.length > 0 && (
         <ul className="eba-connect__mentions" aria-label="Tag a teammate">
           {suggestions.map((member) => (
             <li key={member.user_id}>
-              <button type="button" onClick={() => {
-                tagged.current.set(member.display_name, member.user_id);
-                retryId.current = null;
-                setBody(body.slice(0, body.lastIndexOf("@")) + "@" + member.display_name + " ");
-                setMentionOpen(false);
-              }}>@{member.display_name}</button>
+              <button
+                type="button"
+                onClick={() => {
+                  tagged.current.set(member.display_name, member.user_id);
+                  retryId.current = null;
+                  setBody(body.slice(0, body.lastIndexOf("@")) + "@" + member.display_name + " ");
+                  setMentionOpen(false);
+                }}
+              >
+                @{member.display_name}
+              </button>
             </li>
           ))}
         </ul>
@@ -144,7 +243,11 @@ export function ConnectComposer({ conversation, body, setBody, members }: {
   );
 }
 
-export function ReadConversation({ conversation, through, unread }: {
+export function ReadConversation({
+  conversation,
+  through,
+  unread,
+}: {
   conversation: string;
   through: number | undefined;
   unread: number;
@@ -159,9 +262,9 @@ export function ReadConversation({ conversation, through, unread }: {
       if (document.hidden || reading) return;
       reading = true;
       try {
-        if (await readConnectChat(conversation, through) && active) router.refresh();
+        if ((await readConnectChat(conversation, through)) && active) router.refresh();
       } catch {
-
+        return;
       } finally {
         reading = false;
       }
