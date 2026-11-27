@@ -77,7 +77,7 @@ The local suite tests Lagos dates, week/year boundaries, recurrence bounds and d
 
 Run **`supabase/checks/calendar_part1_verification.sql`** as postgres in an isolated test database. This is a write-based test enclosed in a transaction that ends with `ROLLBACK`, distinct from the read-only preflight. It requires existing active CEO/Admin test users:
 
-- `eba-admin-test@enibrand.com` (Admin)
+- `hub-admin-test@enibrand.com` (Admin)
 - `eba-ceo-test@enibrand.com` (CEO)
 - `eba-calendar-uninvited-test@enibrand.com` (active CEO or Admin; intentionally not invited)
 

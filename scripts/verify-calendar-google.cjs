@@ -36,7 +36,7 @@ const id = "12345678-1234-4234-8234-123456789abc",
   organizer = "admin",
   ceo = "ceo",
   workspace = "fixture-workspace",
-  email = "organizer@enibrand.com";
+  email = "organizer@example.test";
 function fixture() {
   const m = {
     id,
@@ -81,7 +81,7 @@ function fixture() {
     insertTimeout: false,
     hook: null,
     people: [
-      { user_id: organizer, email: "admin@enibrand.com" },
+      { user_id: organizer, email: "calendar-organizer-test@enibrand.com" },
       { user_id: ceo, email: "ceo@enibrand.com" },
     ],
   };
@@ -247,7 +247,7 @@ test("Local occurrence creates one private event and confirms recording separate
   assert.deepEqual(e.reminders, { useDefault: false, overrides: [] });
   assert.deepEqual(
     e.attendees.map((p) => p.email),
-    ["admin@enibrand.com", "ceo@enibrand.com"],
+    ["calendar-organizer-test@enibrand.com", "ceo@enibrand.com"],
   );
   assert(!e.recurrence);
 });

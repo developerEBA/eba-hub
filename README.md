@@ -46,7 +46,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 2. Create or open a dedicated development Supabase project. In the project's **Connect** dialog, copy its project URL and publishable key into `.env.local`. Use the publishable key for this app. Keep privileged keys and test passwords out of the workspace.
 3. In **Authentication**, enable the Email provider and disable public user signup. Leave anonymous sign-ins disabled. In **SQL Editor**, run [the staff memberships migration](supabase/migrations/20261106000000_staff_memberships.sql) once on the development project. If the project already has a staff membership table, inspect its schema and policies before applying the migration.
-4. In **Authentication → Users → Add user → Create new user**, create `eba-ceo-test@enibrand.com` and `eba-admin-test@enibrand.com`. Set a distinct test password for each and enable **Auto Confirm User**. Use disposable test accounts in this development project.
+4. In **Authentication → Users → Add user → Create new user**, create `eba-ceo-test@enibrand.com` and `hub-admin-test@enibrand.com`. Set a distinct test password for each and enable **Auto Confirm User**. Use disposable test accounts in this development project.
 5. As an authorized project administrator, run the following in **SQL Editor** to associate the Auth IDs with their roles. Provisioning is done in the Supabase dashboard for this milestone.
 
    ```sql
@@ -55,7 +55,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
    from auth.users where email = 'eba-ceo-test@enibrand.com'
    union all
    select id, 'admin', 'active'
-   from auth.users where email = 'eba-admin-test@enibrand.com'
+   from auth.users where email = 'hub-admin-test@enibrand.com'
    returning user_id, role, status;
    ```
 
@@ -128,7 +128,7 @@ values ('PLAN_UUID', 'verification.pdf', 'PLAN_UUID/verification.pdf');
    $env:EBA_TEST_SUBMITTED_ATTACHMENT_PATH = 'SUBMITTED_UUID/verification.pdf'
    $env:EBA_TEST_DRAFT_ATTACHMENT_PATH = 'DRAFT_UUID/verification.pdf'
    $env:EBA_TEST_CEO_EMAIL = 'eba-ceo-test@enibrand.com'
-   $env:EBA_TEST_ADMIN_EMAIL = 'eba-admin-test@enibrand.com'
+   $env:EBA_TEST_ADMIN_EMAIL = 'hub-admin-test@enibrand.com'
    $env:EBA_TEST_CEO_PASSWORD = Read-Host -MaskInput 'CEO development password'
    $env:EBA_TEST_ADMIN_PASSWORD = Read-Host -MaskInput 'Admin development password'
    try {

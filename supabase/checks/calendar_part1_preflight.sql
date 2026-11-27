@@ -6,7 +6,7 @@ select table_name,column_name,data_type from information_schema.columns
 where table_schema='public' and (table_name like '%department%' or table_name in ('staff_memberships','connect_profiles')) order by table_name,ordinal_position;
 select role,status,count(*) as people from public.staff_memberships group by role,status order by role,status;
 select u.email,m.role,m.status from auth.users u join public.staff_memberships m on m.user_id=u.id
-where u.email in ('eba-admin-test@enibrand.com','eba-ceo-test@enibrand.com','eba-calendar-uninvited-test@enibrand.com');
+where u.email in ('hub-admin-test@enibrand.com','eba-ceo-test@enibrand.com','eba-calendar-uninvited-test@enibrand.com');
 select c.relname,c.relrowsecurity as rls_enabled,
   has_table_privilege('anon',c.oid,'SELECT') as anon_read,
   has_table_privilege('authenticated',c.oid,'SELECT') as browser_read,

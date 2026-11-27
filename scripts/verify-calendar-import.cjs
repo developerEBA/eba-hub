@@ -32,7 +32,7 @@ function load(file, stubs) {
   }
 }
 const { incomingEvent } = require("../src/lib/calendar-google/import-model.ts"),
-  email = "admin@enibrand.com";
+  email = "google-organizer@example.test";
 const event = () => ({
   id: "google-fixture",
   organizer: { email },
@@ -117,7 +117,7 @@ test("Real importer awaits atomic finish and rechecks known deleted events outsi
   const old = process.env.GOOGLE_ORGANIZER_EMAIL,
     oldOwner = process.env.GOOGLE_IMPORT_OWNER_EMAIL;
   process.env.GOOGLE_ORGANIZER_EMAIL = email;
-  process.env.GOOGLE_IMPORT_OWNER_EMAIL = "fixture-admin@enibrand.com";
+  process.env.GOOGLE_IMPORT_OWNER_EMAIL = "fixture-google-organizer@example.test";
   const calls = [];
   let fail = false;
   class Provider {
@@ -166,7 +166,7 @@ test("Real importer awaits atomic finish and rechecks known deleted events outsi
       calls.map((c) => c.p_action),
       ["claim", "finish"],
     );
-    assert(calls.every((c) => c.p_data.owner_email === "fixture-admin@enibrand.com"));
+    assert(calls.every((c) => c.p_data.owner_email === "fixture-google-organizer@example.test"));
     assert(calls[1].p_data.events.some((e) => e.id === "deleted" && e.cancelled));
     calls.length = 0;
     fail = true;

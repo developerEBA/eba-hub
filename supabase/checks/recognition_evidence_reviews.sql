@@ -1,7 +1,7 @@
 begin;
 
 select set_config('eba_test.ceo', coalesce((select id::text from auth.users where email = 'eba-ceo-test@enibrand.com'), ''), true);
-select set_config('eba_test.admin', coalesce((select id::text from auth.users where email = 'eba-admin-test@enibrand.com'), ''), true);
+select set_config('eba_test.admin', coalesce((select id::text from auth.users where email = 'hub-admin-test@enibrand.com'), ''), true);
 select set_config('eba_test.nominee', coalesce((select id::text from auth.users where email = 'eba-recognition-test@enibrand.com'), ''), true);
 
 do $$

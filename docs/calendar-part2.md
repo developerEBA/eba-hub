@@ -18,7 +18,7 @@ Part 1 remains the local source of truth: Lagos dates, recurrence, occurrence ID
 organizer-only edits/cancellation, invitation visibility and Overview all remain.
 Supabase username/password staff login and the active CEO/Admin rollout are unchanged.
 The operator reports that Google authorization is live-connected as
-`admin@enibrand.com`, Business Standard is active and recording permission is enabled.
+`google-organizer@example.test`, Business Standard is active and recording permission is enabled.
 This implementation does not independently verify those live account conditions.
 
 ## Install and deploy
@@ -385,7 +385,7 @@ Meet availability or actual recording behavior.
 
 After migration, run `supabase/checks/calendar_part2_verification.sql` in an **idle
 staging database** as postgres. It needs the existing active
-`eba-admin-test@enibrand.com` and `eba-ceo-test@enibrand.com` accounts. It exercises
+`hub-admin-test@enibrand.com` and `eba-ceo-test@enibrand.com` accounts. It exercises
 the actual service-role queue/RPC, recurrence enqueue, single-use claim, stale
 completion rejection, recording warning with preserved link, denied invitee retry
 and remaining cancellation. It rolls back all writes and makes no Google calls.

@@ -53,11 +53,14 @@ Then, after the base import migration, review/apply this **additional forward
 migration yourself**:
 `supabase/migrations/20261117133000_google_import_verified_owner.sql`.
 It does not touch credentials, OAuth authorization functions, sessions or accounts.
-Set the following **server-only** explicit import delegation in `.env.local`:
+Set the following **server-only** explicit import delegation in `.env.local`.
+These `example.test` values are placeholders; replace them with the existing
+authorized organizer and verified active Admin for your environment. Do not
+commit account addresses or production values:
 
 ```dotenv
-GOOGLE_ORGANIZER_EMAIL=admin@enibrand.com
-GOOGLE_IMPORT_OWNER_EMAIL=eba-admin-test@enibrand.com
+GOOGLE_ORGANIZER_EMAIL=google-organizer@example.test
+GOOGLE_IMPORT_OWNER_EMAIL=hub-admin-test@enibrand.com
 ```
 
 Do not change GOOGLE_ORGANIZER_EMAIL to the EBA login email. The Google identity

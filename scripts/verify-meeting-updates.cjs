@@ -24,7 +24,7 @@ test('Company visibility SQL preserves private invitations and does not enable H
  assert.match(sql,/default 'private'/);assert.match(sql,/audience<>'private'.*m.role='ceo'/s);assert.match(sql,/o.organizer_id<>p_actor/);
  assert.match(sql,/o.audience_version<>p_version/);assert(!/alter table public.staff_memberships/.test(sql));
 });
-const email='admin@enibrand.com',url='https://meet.google.com/abc-defg-hij';
+const email='google-organizer@example.test',url='https://meet.google.com/abc-defg-hij';
 const event=()=>({id:'google-event',etag:'etag-1',organizer:{email},summary:'Company meeting',start:{dateTime:'2030-11-20T11:00:00Z'},end:{dateTime:'2030-11-20T12:00:00Z'}});
 const {prepareImportedMeeting}=require('../src/lib/calendar-google/import-preparation.ts');
 function provider(){const calls=[];return {calls,patchEvent:async(id,etag,body)=>{calls.push({kind:'patch',id,etag,body});return {...event(),hangoutLink:url}},getSpace:async()=>{calls.push({kind:'space'});return {name:'spaces/fixture',meetingUri:url,config:{}}},configureRecording:async(name)=>{calls.push({kind:'recording'});return {name,config:{artifactConfig:{recordingConfig:{autoRecordingGeneration:'ON'}}}}}}}

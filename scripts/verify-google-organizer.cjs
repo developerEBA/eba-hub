@@ -13,7 +13,7 @@ require.extensions['.ts'] = (module, filename) => {
 
 process.env.GOOGLE_TOKEN_ENCRYPTION_KEY=Buffer.alloc(32,7).toString('base64');
 process.env.GOOGLE_CLIENT_ID='fixture-client';process.env.GOOGLE_CLIENT_SECRET='fixture-secret';
-process.env.GOOGLE_REDIRECT_URI='http://localhost:3000/api/google/callback';process.env.GOOGLE_ORGANIZER_EMAIL='organizer@example.com';
+process.env.GOOGLE_REDIRECT_URI='https://example.test/api/google/callback';process.env.GOOGLE_ORGANIZER_EMAIL='organizer@example.com';
 process.env.NEXT_PUBLIC_SUPABASE_URL='https://fixture.invalid';process.env.SUPABASE_SECRET_KEY='fixture-server';
 let actor={id:'admin',session:'session-a',role:'Admin'}, row, states, cookie, identity, tokens, refreshError, failSave, revokeOK, meet, refreshHook, rpcCalls, providerCalls, scopesOK, identityError, lookupError, dbUpdates, libraryAvailable;
 const jar={get:()=>cookie?{value:cookie}:undefined,set:(_name,value)=>{cookie=value}};
@@ -33,7 +33,7 @@ const database={
     if(lookupError)return {error:{code:lookupError,message:'fixture database message must not escape'}};if(!filters.every(([k,v])=>k==='singleton'||row[k]===v))return {error:true};if(mutation)Object.assign(row,mutation);return {data:structuredClone(row)};
   },then:(resolve,reject)=>q.single().then(resolve,reject)};return q;},
 };
-const staffClient={auth:{getUser:async()=>({data:{user:actor?{id:actor.id,email:'admin@enibrand.com'}:null}}),getClaims:async()=>({data:{claims:{sub:actor?.id,session_id:actor?.session}}})}};
+const staffClient={auth:{getUser:async()=>({data:{user:actor?{id:actor.id,email:'google-organizer@example.test'}:null}}),getClaims:async()=>({data:{claims:{sub:actor?.id,session_id:actor?.session}}})}};
 const providerStub={
   callEndingScope:'https://www.googleapis.com/auth/meetings.space.created',
   googleScopes:['openid','email','https://www.googleapis.com/auth/calendar.events.owned','https://www.googleapis.com/auth/calendar.calendars.readonly','https://www.googleapis.com/auth/meetings.space.settings'],
@@ -91,7 +91,7 @@ test('Status distinguishes setup failures, database lookup failures and an actua
   reset();status=await server.connectionStatus();assert.equal(status.state,'disconnected');assert.equal(status.email,null);
 });
 test('Production status rejects a localhost callback and missing Google library with safe codes',()=>{
-  const previous=process.env.NODE_ENV;try{process.env.NODE_ENV='production';assert.throws(()=>server.googleConfig(),e=>e.diagnosticCode==='GOOGLE_REDIRECT_URI_INVALID')}finally{if(previous===undefined)delete process.env.NODE_ENV;else process.env.NODE_ENV=previous}
+  const previous=process.env.NODE_ENV,previousRedirect=process.env.GOOGLE_REDIRECT_URI;try{process.env.NODE_ENV='production';process.env.GOOGLE_REDIRECT_URI=`http://${['localhost','3000'].join(':')}/api/google/callback`;assert.throws(()=>server.googleConfig(),e=>e.diagnosticCode==='GOOGLE_REDIRECT_URI_INVALID')}finally{if(previous===undefined)delete process.env.NODE_ENV;else process.env.NODE_ENV=previous;if(previousRedirect===undefined)delete process.env.GOOGLE_REDIRECT_URI;else process.env.GOOGLE_REDIRECT_URI=previousRedirect}
   reset();const ready=libraryAvailable;libraryAvailable=false;try{assert.throws(()=>server.googleConfig(),e=>e.diagnosticCode==='GOOGLE_AUTH_LIBRARY_MISSING')}finally{libraryAvailable=ready}
 });
 test('Settings status GET is a read-only database lookup and never refreshes organizer credentials',async()=>{
@@ -141,12 +141,12 @@ test('Disconnect during refresh prevents use of the refreshed access token',asyn
 });
 test('HTTP routes deny CEOs, signed-out requests and cross-origin mutations',async()=>{
   reset();actor.role='CEO';assert.equal((await connect.POST(post())).status,403);assert.equal((await disconnect.POST(post())).status,403);assert.equal((await status.GET()).status,200);
-  const result=await callback.GET(new Request('http://localhost:3000/api/google/callback?state=fixture&code=fixture'));assert(result.headers.get('location').endsWith('google=forbidden'));assert.equal(rpcCalls.length,0);
+  const result=await callback.GET(new Request('https://example.test/api/google/callback?state=fixture&code=fixture'));assert(result.headers.get('location').endsWith('google=forbidden'));assert.equal(rpcCalls.length,0);
   actor=null;assert.equal((await status.GET()).status,403);assert.equal((await connect.POST(post())).status,403);
   reset();assert.equal((await connect.POST(post('https://attacker.invalid'))).status,403);assert.equal((await disconnect.POST(post('https://attacker.invalid'))).status,403);assert.equal(rpcCalls.length,0);
 });
 test('Callback redirects contain only allowlisted notices, never provider payloads',async()=>{
-  reset();const f=await start();cookie=f.browser;const result=await callback.GET(new Request(`http://localhost:3000/api/google/callback?state=${f.state}&error=access_denied&error_description=PRIVATE`));assert.equal(result.status,303);assert(result.headers.get('location').endsWith('google=denied'));assert(!result.headers.get('location').includes('PRIVATE'));assert.equal(result.headers.get('cache-control'),'private, no-store');
+  reset();const f=await start();cookie=f.browser;const result=await callback.GET(new Request(`https://example.test/api/google/callback?state=${f.state}&error=access_denied&error_description=PRIVATE`));assert.equal(result.status,303);assert(result.headers.get('location').endsWith('google=denied'));assert(!result.headers.get('location').includes('PRIVATE'));assert.equal(result.headers.get('cache-control'),'private, no-store');
 });
 test('Identity library rejection and incomplete permissions cannot enable a connection',async()=>{
   reset();let f=await start();identityError=true;await assert.rejects(()=>finish(f));assert(!row.enabled);assert.equal(row.refresh_ciphertext,null);

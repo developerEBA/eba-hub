@@ -46,12 +46,15 @@ variables are required or supported for the paused Zoho/email integration.
 
 ## URL configuration to replace
 
-The development values in `.env.example` are not production values:
+The template leaves `GOOGLE_REDIRECT_URI` blank because every environment must
+register its own exact callback. The values in `.env.example` are not production
+values:
 
 - `EBA_APP_URL=http://localhost:3000` → the canonical HTTPS origin.
-- `GOOGLE_REDIRECT_URI=http://localhost:3000/api/google/callback` → the exact
-  public HTTPS callback shown above. Register the identical URI in the Google
-  OAuth client. Callback request logging is explicitly excluded in `next.config.ts`.
+- `GOOGLE_REDIRECT_URI` → the exact public HTTPS callback for the deployed site,
+  ending in `/api/google/callback`. Register the identical URI in the Google OAuth
+  client. Keep the production origin in host settings only. Callback request
+  logging is explicitly excluded in `next.config.ts`.
 - Supabase Auth URL Configuration is hosted dashboard state, not committed
   configuration. Set its Site URL to the canonical HTTPS origin. Keep its
   Redirect URL allowlist restricted to exact production application URLs; add

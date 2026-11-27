@@ -59,10 +59,9 @@ with mocked assertions or claimed as live passes.
 
 2. In Google Cloud, enable **Google Calendar API** and **Google Meet REST API** in
    the OAuth client's project. Configure a **Web application** OAuth client with
-   the exact authorized redirect URI:
-   `http://localhost:3000/api/google/callback`.
-   Production needs its own registered HTTPS callback at the same exact path and
-   the corresponding server environment value. No trailing slash or wildcard.
+   the exact URI configured in `GOOGLE_REDIRECT_URI`. It must end in
+   `/api/google/callback`; register each environment's origin separately and do
+   not use a trailing slash or wildcard.
 3. Configure the consent screen/data access with the scopes below. An internal
    Workspace app is appropriate if all authorization is internal to the Workspace
    organization; otherwise configure allowed test users during testing and satisfy
@@ -71,9 +70,10 @@ with mocked assertions or claimed as live passes.
    External apps left in Testing can receive refresh tokens with limited lifetimes;
    use a suitable production consent configuration for persistent offline access.
 4. Keep the existing GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI,
-   and GOOGLE_ORGANIZER_EMAIL server-only. The organizer must match Google's
-   **verified email exactly**, including case. The current intended organizer is
-   `admin@enibrand.com`. No hosted-domain or email hint authorizes an account.
+   and GOOGLE_ORGANIZER_EMAIL server-only. Set the organizer to the currently
+   authorized Google account's **verified email exactly**, including case. Keep
+   the address in the host's environment settings, not in repository files. No
+   hosted-domain or email hint authorizes an account.
 5. Add **GOOGLE_TOKEN_ENCRYPTION_KEY** to `.env.local` and the production server's
    secret manager. It must be canonical base64 for **32 random bytes**, separate
    from the database and Supabase keys. Generate it directly into a local ignored

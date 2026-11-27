@@ -4,7 +4,7 @@ declare admin_id uuid; ceo_id uuid; req uuid:=gen_random_uuid(); first_id uuid; 
   v_start timestamptz:=date_trunc('hour',now())+interval '3 days'; claim jsonb; next_claim jsonb; res jsonb; lease uuid;
 begin
   select u.id into admin_id from auth.users u join public.staff_memberships m on m.user_id=u.id
-    where u.email='eba-admin-test@enibrand.com' and m.role='admin' and m.status='active';
+    where u.email='hub-admin-test@enibrand.com' and m.role='admin' and m.status='active';
   select u.id into ceo_id from auth.users u join public.staff_memberships m on m.user_id=u.id
     where u.email='eba-ceo-test@enibrand.com' and m.role='ceo' and m.status='active';
   if admin_id is null or ceo_id is null then raise exception 'Existing active test Admin and CEO required'; end if;

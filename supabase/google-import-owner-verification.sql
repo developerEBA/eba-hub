@@ -7,8 +7,8 @@ select has_table_privilege('authenticated','public.calendar_google_import_owners
 select exists(select 1 from public.calendar_google_import_owners v
  join public.google_organizer_connection c on c.singleton=v.singleton
  join auth.users u on u.id=v.owner_id join public.staff_memberships m on m.user_id=u.id
- where c.enabled and c.status='connected' and c.email='admin@enibrand.com'
+ where c.enabled and c.status='connected' and c.email='google-organizer@example.test'
  and v.google_email=c.email and v.google_subject=c.subject and v.connected_at=c.connected_at
- and u.email='eba-admin-test@enibrand.com' and m.role='admin' and public.calendar_reminder_account_active(u.id)
+ and u.email='hub-admin-test@enibrand.com' and m.role='admin' and public.calendar_reminder_account_active(u.id)
 ) current_durable_mapping_valid;
 rollback;

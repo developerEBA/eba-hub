@@ -3,7 +3,7 @@
 -- OAuth states, session IDs, Google subject, verifier, nonce or token values.
 begin transaction read only;
 with expected(label,email) as (values
- ('google_organizer','admin@enibrand.com'),('configured_eba_admin','eba-admin-test@enibrand.com')
+ ('google_organizer','google-organizer@example.test'),('configured_eba_admin','hub-admin-test@enibrand.com')
 ), checks as (
  select e.label,e.email,u.id is not null auth_user_exists,m.user_id is not null membership_exists,
    coalesce(m.status='active',false) membership_active,
@@ -30,11 +30,11 @@ select *,case when not auth_user_exists then 'auth_user_missing'
 
 select c.singleton is not null connection_exists,coalesce(c.enabled,false) connection_enabled,
  coalesce(c.status='connected',false) connection_status_connected,
- coalesce(c.email='admin@enibrand.com',false) connected_email_matches_expected,
+ coalesce(c.email='google-organizer@example.test',false) connected_email_matches_expected,
  c.subject is not null verified_google_identity_present,
  c.verified_at is not null verified_at_present,c.connected_at is not null connected_at_present,
  exists(select 1 from public.google_organizer_oauth_states s join auth.users u on u.id=s.admin_id
-   where u.email='eba-admin-test@enibrand.com' and s.organizer_email=c.email
+   where u.email='hub-admin-test@enibrand.com' and s.organizer_email=c.email
    and s.consumed_at is not null and s.saved_at=c.connected_at and s.version<c.version
  ) matching_successful_oauth_proof,
  to_regprocedure('public.calendar_google_import_owner(text,text)') is not null mapping_resolver_installed,

@@ -846,7 +846,7 @@
 .eba-overview__tiles {
   position: relative;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin: -0.75rem 0.625rem 0.875rem;
+  margin: -1.5rem 0.625rem 0.875rem;
 }
 
 .eba-overview__grid {

@@ -1,5 +1,5 @@
 begin;
-select set_config('eba_test.admin',coalesce((select id::text from auth.users where email='eba-admin-test@enibrand.com'),''),true);
+select set_config('eba_test.admin',coalesce((select id::text from auth.users where email='hub-admin-test@enibrand.com'),''),true);
 select set_config('eba_test.ceo',coalesce((select id::text from auth.users where email='eba-ceo-test@enibrand.com'),''),true);
 select set_config('eba_test.outsider',coalesce((select id::text from auth.users where email='eba-calendar-uninvited-test@enibrand.com'),''),true);
 do $$ begin
@@ -18,7 +18,7 @@ insert into public.calendar_reminders(occurrence_id,user_id,occurrence_version,l
 select id,current_setting('eba_test.ceo')::uuid,version,10,starts_at-interval '10 minutes','scheduled' from public.calendar_occurrences where id=current_setting('eba_test.occurrence')::uuid;
 
 set local role authenticated;
-select set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('eba_test.admin'),'email','eba-admin-test@enibrand.com','role','authenticated')::text,true);
+select set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('eba_test.admin'),'email','hub-admin-test@enibrand.com','role','authenticated')::text,true);
 do $$ begin
   if (select count(*) from public.calendar_occurrences where series_id=current_setting('eba_test.series')::uuid)<>4 then raise exception 'Admin must see all four weekly occurrences'; end if;
 end $$;
@@ -58,7 +58,7 @@ select set_config('request.jwt.claims',jsonb_build_object('sub',current_setting(
 do $$ begin
   if not exists(select 1 from public.calendar_occurrences where id=current_setting('eba_test.occurrence')::uuid and title='DEV Calendar moved' and starts_at=current_setting('eba_test.start')::timestamptz+interval '1 day') then raise exception 'CEO did not see rescheduling'; end if;
 end $$;
-select set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('eba_test.admin'),'email','eba-admin-test@enibrand.com','role','authenticated')::text,true);
+select set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('eba_test.admin'),'email','hub-admin-test@enibrand.com','role','authenticated')::text,true);
 do $$ begin
   if not exists(select 1 from public.calendar_occurrences where id=current_setting('eba_test.occurrence')::uuid and version=2) then raise exception 'Admin did not see rescheduling'; end if;
 end $$;
@@ -73,7 +73,7 @@ select set_config('request.jwt.claims',jsonb_build_object('sub',current_setting(
 do $$ begin
   if (select count(*) from public.calendar_occurrences where series_id=current_setting('eba_test.series')::uuid and status='scheduled' and ends_at>now())<>3 then raise exception 'CEO upcoming list did not remove cancellation'; end if;
 end $$;
-select set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('eba_test.admin'),'email','eba-admin-test@enibrand.com','role','authenticated')::text,true);
+select set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('eba_test.admin'),'email','hub-admin-test@enibrand.com','role','authenticated')::text,true);
 do $$ begin
   if (select count(*) from public.calendar_occurrences where series_id=current_setting('eba_test.series')::uuid and status='scheduled' and ends_at>now())<>3 then raise exception 'Admin upcoming list did not remove cancellation'; end if;
 end $$;
